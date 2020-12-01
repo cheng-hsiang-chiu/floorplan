@@ -1,12 +1,20 @@
 <!DOCTYPE html>
 
 <html>
-<head>
-  floorplan visualization
-</head>
 <body>
 
 <textarea id="coordinate" name ="coordinate" rows="16" cols="16">
 </textarea>
+
+<button type="button" onclick="placement()">Build</button>
+
+<p id="placement"></p>
+
+<script>
+function placement() {
+  var x = document.getElementById"coordinate"().value;
+  document.getElementById("placment").innerHTML = x;
+}
+</script>
 </body>
 </html>
