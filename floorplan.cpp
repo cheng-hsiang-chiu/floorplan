@@ -3,6 +3,7 @@
 #include <fstream>
 #include <vector>
 #include <stack>
+#include <algorithm>
 
 
 
@@ -55,6 +56,8 @@ public:
 
   }
 
+
+  // check if postfix is valid
   bool is_valid_postfix() {
     std::stack<char> stk;
     
@@ -79,6 +82,95 @@ public:
       return false;
 
   }
+
+
+  // swap two adjacent operands
+  void operand_swap() {
+    int head = 0, tail = 1;
+    
+    while(tail < _postfix.size()) {
+      if((_postfix[head] != 'H') &&
+         (_postfix[head] != 'V') &&
+         (_postfix[tail] != 'H') &&
+         (_postfix[tail] != 'V')) {
+        std::string candidate_postfix = _postfix;
+        std::swap(candidate_postfix[head], candidate_postfix[tail]);
+
+        head = tail;
+        ++tail;
+        std::cout << candidate_postfix << '\n';
+        continue;
+      }
+
+      ++tail;
+
+    }
+  }
+
+
+  // complement chains, V->H, H->V
+  void chain_invert() {
+    for(int i = 0; i < _postfix.size(); ++i) {
+      std::string candidate_postfix = _postfix;
+      if(candidate_postfix[i] == 'H') {
+        candidate_postfix[i] = 'V';
+        std::cout << candidate_postfix << '\n';
+      }
+
+      else if(candidate_postfix[i] == 'V') {
+        candidate_postfix[i] = 'H';
+        std::cout << candidate_postfix << '\n'; 
+      }
+    }
+  }
+ 
+ 
+  // swap two adjacent operand and operator
+  void operator_operand_swap() {
+    int head = 0, tail = 1;
+
+    while(tail < _postfix.size()) {
+      std::string candidate_postfix = _postfix;
+    
+      char cph = candidate_postfix[head];
+      char cpt = candidate_postfix[tail];
+
+      // cph is an idx and cpt is a cutline
+      if((cph != 'H') && (cph != 'V')) {
+        if((cpt == 'H') || (cpt == 'V')) {
+          std::swap(candidate_postfix[head], candidate_postfix[tail]);
+          head = tail;
+          ++tail;
+          std::cout << candidate_postfix << '\n';
+          continue;
+        }
+        else {
+          ++head;
+          ++tail;
+        }
+      }
+
+      else if((cph == 'H') || (cph == 'V')) {
+        if((cpt != 'H') && (cpt != 'V')) {
+          std::swap(candidate_postfix[head], candidate_postfix[tail]);
+          head = tail;
+          ++tail;
+          std::cout << candidate_postfix << '\n';
+          continue;
+        }
+        else {
+          ++head;
+          ++tail;
+        }
+      }
+
+      else {
+        ++head;
+        ++tail;
+      }
+    }
+  }
+  
 
   // update modules' positions
   void packing() {
@@ -110,7 +202,11 @@ public:
         //std::cout << cluster.w << " " << cluster.h << " " << cluster.beg << " " << cluster.end << '\n';
       }
     }
+
+    _area = (_stack.top()).w * (_stack.top()).h;
+    std::cout << "area  = " << _area << '\n';
   }
+
 
   void packing_cutline(char& cutline) {
     cluster_t cluster, cluster_r, cluster_l;
@@ -146,6 +242,7 @@ public:
     _stack.push(cluster);
   }
 
+
   // print out the read in modules
   void print_modules() {
     for(int i = 0; i < _modules.size(); ++i) {
@@ -164,6 +261,7 @@ private:
   std::string _input_file;
   std::string _output_file;
   std::stack<cluster_t> _stack;
+  int _area;
 };
 
 
@@ -200,6 +298,9 @@ int main(int argc, char* argv[]) {
   floorplan fp("./circuits/circuit1.txt", "./circuit1_sol.txt");
   //fp.run();
   //fp.print_modules();
-  std::cout << fp.is_valid_postfix();
+  //std::cout << fp.is_valid_postfix();
+  //fp.operand_swap();
+  //fp.chain_invert();
+  fp.operator_operand_swap();
   return 0;
 }
