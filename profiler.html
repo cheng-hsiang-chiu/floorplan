@@ -3,7 +3,7 @@
 <html>
 <body>
 
-<textarea id="coordinate" name ="coordinate" rows="16" cols="16">
+<textarea id="floorplan" name ="floorplan" rows="16" cols="16">
 </textarea>
 
 <button type="button" onclick="placement()">Build</button>
@@ -12,9 +12,16 @@
 
 <script>
 function placement() {
-  var x = document.getElementById("coordinate").value;
-  document.getElementById("demo").innerHTML = x;
+  var x = document.getElementById("floorplan").value;
+  // document.getElementById("demo").innerHTML = x;
 }
 </script>
+
+<script>
+var txt = document.getElementById("floorplan").value;
+var obj = JSON.parse(txt);
+document.getElementById("demo").innerHTML = obj.block_number;
+</script>
+
 </body>
 </html>
