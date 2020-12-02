@@ -18,7 +18,8 @@ function placement() {
   var canvas = document.getElementById("mycanvas");
   var ctx = canvas.getContext("2d");
   var ctx1 = canvas.getContext("2d");
-  
+  var ctx2 = canvas.getContext("2d");
+
   var i;
   for(i = 0; i < obj.coordinates.length; ++i) {
     var obji = obj.coordinates[i];
@@ -29,7 +30,10 @@ function placement() {
     ctx1.fillText(obji.idx, obji.llx+obji.width/2, obji.lly+obji.height/2);
   }
   // document.getElementById("demo").innerHTML = obj.block_number + "," + obj.coordinates[0].width;
-  ctx.strokeRect(0, 0, obj.urx, obj.ury);
+  ctx2.beginPath();
+  ctx2.strokeStyle = "red";
+  ctx2.rect(0, 0, obj.urx, obj.ury);
+  ctx2.stroke();
 }
 </script>
 
@@ -37,3 +41,4 @@ function placement() {
 
 </body>
 </html>
+
