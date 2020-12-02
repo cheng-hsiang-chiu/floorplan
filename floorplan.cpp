@@ -49,11 +49,30 @@ public:
               << _modules[i].h   << '\n';
     }
 
-    //std::string _output_file_json = _output_file;
-    //_output_file_json.replace(_output_file_json.end()-3, 
-    //                          _output_file_json.end(), "json");
+    // generate json output 
+    std::string output_file_json = _output_file;
+    output_file_json.replace(output_file_json.end()-3, 
+                             output_file_json.end(), "json");
 
-
+    std::ofstream outfile_json(output_file_json, std::ios::out);
+    outfile_json << "{\"circuit\":\"" << _input_file << "\""
+                 << ",\"block_number\":" << _modules.size()
+                 << ",\"llx\":0"
+                 << ",\"lly\":0"
+                 << ",\"coordinates\":"
+                 << "[";
+    for(int i = 0; i < _modules.size(); ++i) {
+      outfile_json << "{\"idx\":" << _modules[i].idx
+                   << ",\"llx\":" << _modules[i].llx
+                   << ",\"lly\":" << _modules[i].lly
+                   << ",\"width\":" << _modules[i].w
+                   << ",\"height\":" << _modules[i].h;
+      if(i == _modules.size()-1)
+        outfile_json << "}";
+      else
+        outfile_json << "},";
+    }
+    outfile_json << "]}";
   }
 
 
@@ -80,7 +99,32 @@ public:
       return true;
     else
       return false;
+  }
 
+
+  // check if candidate_postfix is valid
+  bool is_valid_postfix(const std::string& str) {
+    std::stack<char> stk;
+    
+    for(int i = 0; i < str.size(); ++i) {
+      if((str[i] == 'V') || (str[i] == 'H')) {
+        if(stk.size() >= 2) { 
+          stk.pop();
+
+          if(i == str.size()-1)
+            stk.pop();
+        }
+      }
+
+      else {
+        stk.push(str[i]);
+      }
+    }
+
+    if(stk.size() == 0)
+      return true;
+    else
+      return false;
   }
 
 
@@ -89,21 +133,19 @@ public:
     int head = 0, tail = 1;
     
     while(tail < _postfix.size()) {
-      if((_postfix[head] != 'H') &&
-         (_postfix[head] != 'V') &&
-         (_postfix[tail] != 'H') &&
-         (_postfix[tail] != 'V')) {
-        std::string candidate_postfix = _postfix;
-        std::swap(candidate_postfix[head], candidate_postfix[tail]);
+      std::string candidate_postfix = _postfix;
 
+      char cph = candidate_postfix[head];
+      char cpt = candidate_postfix[tail];
+
+      if((cph != 'H') && (cph != 'V') && (cpt != 'H') && (cpt != 'V')) {
+        std::swap(candidate_postfix[head], candidate_postfix[tail]);
         head = tail;
         ++tail;
         std::cout << candidate_postfix << '\n';
         continue;
       }
-
       ++tail;
-
     }
   }
 
@@ -141,7 +183,10 @@ public:
           std::swap(candidate_postfix[head], candidate_postfix[tail]);
           head = tail;
           ++tail;
-          std::cout << candidate_postfix << '\n';
+          if(is_valid_postfix(candidate_postfix))
+            std::cout << candidate_postfix << " is valid.\n";
+          else
+            std::cout << candidate_postfix << " is not valid.\n";
           continue;
         }
         else {
@@ -155,7 +200,10 @@ public:
           std::swap(candidate_postfix[head], candidate_postfix[tail]);
           head = tail;
           ++tail;
-          std::cout << candidate_postfix << '\n';
+          if(is_valid_postfix(candidate_postfix))
+            std::cout << candidate_postfix << " is valid.\n";
+          else
+            std::cout << candidate_postfix << " is not valid.\n";
           continue;
         }
         else {
@@ -163,7 +211,6 @@ public:
           ++tail;
         }
       }
-
       else {
         ++head;
         ++tail;
@@ -256,7 +303,7 @@ public:
   }
 
 private:
-  std::string _postfix = "01V23HH";
+  std::string _postfix = "31V20HH";
   std::vector<module_t> _modules;
   std::string _input_file;
   std::string _output_file;
@@ -296,11 +343,11 @@ std::vector<module_t> read_modules(const std::string circuit_name) {
 int main(int argc, char* argv[]) {
 
   floorplan fp("./circuits/circuit1.txt", "./circuit1_sol.txt");
-  //fp.run();
-  //fp.print_modules();
+  fp.run();
+  fp.print_modules();
   //std::cout << fp.is_valid_postfix();
   //fp.operand_swap();
   //fp.chain_invert();
-  fp.operator_operand_swap();
+  //fp.operator_operand_swap();
   return 0;
 }
