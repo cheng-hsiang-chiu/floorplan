@@ -41,6 +41,7 @@ public:
     if(!outfile)
       std::cerr << "File could not be opened for writing\n";
 
+    outfile << "0 0 " << _urx << " " << _ury << '\n';
     for(int i = 0; i < _modules.size(); ++i) {
       outfile << _modules[i].idx << " " 
               << _modules[i].llx << " "
@@ -59,6 +60,8 @@ public:
                  << ",\"block_number\":" << _modules.size()
                  << ",\"llx\":0"
                  << ",\"lly\":0"
+                 << ",\"urx\":" << _urx
+                 << ",\"ury\":" << _ury
                  << ",\"coordinates\":"
                  << "[";
     for(int i = 0; i < _modules.size(); ++i) {
@@ -252,6 +255,8 @@ public:
 
     _area = (_stack.top()).w * (_stack.top()).h;
     std::cout << "area  = " << _area << '\n';
+    _urx = (_stack.top()).w;
+    _ury = (_stack.top()).h;
   }
 
 
@@ -308,7 +313,7 @@ private:
   std::string _input_file;
   std::string _output_file;
   std::stack<cluster_t> _stack;
-  int _area;
+  int _area, _urx, _ury;
 };
 
 
