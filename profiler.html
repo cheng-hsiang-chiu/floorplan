@@ -13,15 +13,27 @@
 <script>
 function placement() {
   var x = document.getElementById("floorplan").value;
-  // document.getElementById("demo").innerHTML = x;
+  var obj = JSON.parse(x);
+
+  var canvas = document.getElementById("mycanvas");
+  var ctx = canvas.getContext("2d");
+  var ctx1 = canvas.getContext("2d");
+  
+  var i;
+  for(i = 0; i < obj.coordinates.length; ++i) {
+    var obji = obj.coordinates[i];
+    ctx.fillStyle = "#000000";
+    ctx.strokeRect(obji.llx, obji.lly, obji.width, obji.height);
+    ctx1.fillStyle = "#FF0000";
+    ctx1.font = "30px Arial";
+    ctx1.fillText(obji.idx, obji.llx+obji.width/2, obji.lly+obji.height/2);
+  }
+  // document.getElementById("demo").innerHTML = obj.block_number + "," + obj.coordinates[0].width;
+
 }
 </script>
 
-<script>
-var txt = document.getElementById("floorplan").value;
-var obj = JSON.parse(txt);
-document.getElementById("demo").innerHTML = obj.block_number;
-</script>
+<canvas id="mycanvas" width="2000" height="2000" style="border:1px solid #d3d3d3;">
 
 </body>
 </html>
