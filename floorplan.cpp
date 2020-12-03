@@ -153,18 +153,26 @@ public:
   }
 
 
-  // complement chains, V->H, H->V
+  // complement chains 
   void chain_invert() {
     for(int i = 0; i < _postfix.size(); ++i) {
       std::string candidate_postfix = _postfix;
       if(candidate_postfix[i] == 'H') {
-        candidate_postfix[i] = 'V';
-        std::cout << candidate_postfix << '\n';
+        if((i+1 < candidate_postfix.size()) &&
+           (candidate_postfix[i+1] != 'H')  &&
+           (candidate_postfix[i+1] != 'V')) {
+          candidate_postfix[i] = 'V';
+          std::cout << candidate_postfix << '\n';
+        }
       }
 
       else if(candidate_postfix[i] == 'V') {
-        candidate_postfix[i] = 'H';
-        std::cout << candidate_postfix << '\n'; 
+        if((i+1 < candidate_postfix.size()) &&
+           (candidate_postfix[i+1] != 'H')  &&
+           (candidate_postfix[i+1] != 'V')) {
+          candidate_postfix[i] = 'H';
+          std::cout << candidate_postfix << '\n'; 
+        }
       }
     }
   }
@@ -307,8 +315,16 @@ public:
     }
   }
 
+
+  // perform optimization
+  void optimize() {
+
+  }
+
+
 private:
-  std::string _postfix = "31V20HH";
+  //std::string _postfix = "31V20HH";
+  std::string _postfix = "012345VHVHV";
   std::vector<module_t> _modules;
   std::string _input_file;
   std::string _output_file;
@@ -347,7 +363,7 @@ std::vector<module_t> read_modules(const std::string circuit_name) {
 
 int main(int argc, char* argv[]) {
 
-  floorplan fp("./circuits/circuit1.txt", "./circuit1_sol.txt");
+  floorplan fp("./circuits/circuit2.txt", "./circuit2_sol.txt");
   fp.run();
   fp.print_modules();
   //std::cout << fp.is_valid_postfix();
