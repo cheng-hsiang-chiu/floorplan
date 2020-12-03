@@ -6,6 +6,9 @@
 #include <algorithm>
 
 
+#define FROZEN 0.1
+
+
 
 typedef struct MODULE {
   int idx;
@@ -318,7 +321,10 @@ public:
 
   // perform optimization
   void optimize() {
+    double temperature = 100.0;
+    while(temperature > FROZEN) {
 
+    }
   }
 
 
