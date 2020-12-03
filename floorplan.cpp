@@ -318,12 +318,54 @@ public:
     }
   }
 
+  Expression generate_neighbor(const Expression& curr) {
+    // pick up five moves at random
+    Expression prop = curr;
+    switch(rand()%5) {
+      case 0:
+      case 1:
+      ...
+    }
+    return prop;
+  }
 
   // perform optimization
   void optimize() {
     double temperature = 100.0;
+    
+    Expression curr, prop, best;
+    
+    curr = generate_initial_solution(); // 12V3H4V5H6V...
+    
+    best = curr;
+    
+    int area_best = packing(curr);
+    
     while(temperature > FROZEN) {
-
+      
+      for(int iter = 0; itr < 1000; itr++) {
+        
+        prop = generate_neighbor(curr);
+        auto area_curr = packing(curr);
+        auto area_prop = packing(prop);
+        auto cost = area_prop - area_curr;
+        
+        if(area_prop < area_curr) {
+           curr = prop;
+           if(area_prop < area_best) {
+             best = prop;
+             area_best = area_prop;
+           }
+        }
+        else {
+          auto prob = std::exp(-cost / temperature); 
+          if(prob > std::uniform_real_distribution(0, 1)) {
+            curr = prop; 
+          }
+        }
+      }
+      
+      temperature *= 0.95;  
     }
   }
 
