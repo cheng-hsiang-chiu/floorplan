@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <random>
 #include <ctime>
-
+#include <cstdlib>
 
 
 #define FROZEN 0.1
@@ -35,12 +35,35 @@ public:
   floorplan(std::string input, std::string output) 
     : _input_file(input), _output_file(output) {
     _modules = read_modules(_input_file);
+
+    /*
+    // an initial normalized polish expression
+    for(int i = 0; i < _modules.size(); ++i) {
+      if(i == 0) { 
+        _postfix.push_back(_modules[i].idx);
+        continue;
+      }
+      if(i%2 == 1) {
+        _postfix.push_back(_modules[i].idx);
+        _postfix.push_back('V');
+        continue;
+      }
+      if(i%2 == 0) {
+        _postfix.push_back(_modules[i].idx);
+        _postfix.push_back('H');
+        continue;
+      }
+    }*/
   }  
 
 
   // execute and generate an output file and its json
   void run() {
-    packing();
+    int area = packing(_postfix);
+   
+   
+    optimize();
+    area = packing(_postfix);
     
     std::ofstream outfile(_output_file, std::ios::out);
 
@@ -138,10 +161,10 @@ public:
 
 
   // M1: swap two adjacent operands
-  std::string operand_swap() {
-    std::srand(std::time(nullptr));
+  std::string operand_swap(const std::string& postfix_curr) {
+    //std::srand(std::time(nullptr));
     int head, tail;
-    std::string postfix_prop = _postfix;
+    std::string postfix_prop = postfix_curr;
 
 
     while(1) {
@@ -170,10 +193,10 @@ public:
 
 
   // M2 : complement a cutline
-  std::string complement_cutline() {
-    std::srand(std::time(nullptr));
+  std::string complement_cutline(const std::string& postfix_curr) {
+    //std::srand(std::time(nullptr));
     int head;
-    std::string postfix_prop = _postfix;
+    std::string postfix_prop = postfix_curr;
 
     while(1) {
       head = (std::rand()) % (postfix_prop.size()-1);
@@ -196,8 +219,8 @@ public:
  
 
   // M3 : complement last pair of two cutline
-  std::string complement_last2cutline() {
-    std::string postfix_prop = _postfix;
+  std::string complement_last2cutline(const std::string& postfix_curr) {
+    std::string postfix_prop = postfix_curr;
   
     for(int i = postfix_prop.size()-1; i > 0; --i) {
       if((postfix_prop[i] == 'H') && postfix_prop[i-1] == 'V') {
@@ -217,13 +240,13 @@ public:
 
 
   // M4 : swap two adjacent operand and operator
-  std::string operator_operand_swap() {
-    std::srand(std::time(nullptr));
+  std::string operator_operand_swap(const std::string& postfix_curr) {
+    //std::srand(std::time(nullptr));
     int head, tail;
-    std::string postfix_prop = _postfix;
+    std::string postfix_prop = postfix_curr;
 
     while(1) {
-      head = (std::rand()) % (postfix_prop.size()-1);
+      head = (std::rand()) % (postfix_prop.size()-2);
       tail = head + 1;
       
       char pph = postfix_prop[head];
@@ -242,20 +265,22 @@ public:
       }
 
       if((pph != 'H') && (pph != 'V')) {
-        if((pph == 'H') || (pph == 'V')) {
+        if((ppt == 'H') || (ppt == 'V')) {
           std::swap(postfix_prop[head], postfix_prop[tail]);
           if(is_valid_postfix(postfix_prop) == false)
             continue;
           else
             return postfix_prop;
         }
+        else
+          continue;
       }
     }
   }
   
   // M5 : complement first pair of two cutline
-  std::string complement_first2cutline() {
-    std::string postfix_prop = _postfix;
+  std::string complement_first2cutline(const std::string& postfix_curr) {
+    std::string postfix_prop = postfix_curr;
   
     for(int i = 0; i < postfix_prop.size()-1; ++i) {
       if((postfix_prop[i] == 'H') && postfix_prop[i+1] == 'V') {
@@ -275,20 +300,20 @@ public:
 
 
   // update modules' positions
-  void packing() {
+  int packing(const std::string& postfix) {
     int cluster_id = 0;
 
-    for(int i = 0; i < _postfix.size(); ++i) {
+    for(int i = 0; i < postfix.size(); ++i) {
         
       // Horizontal cutline
-      if((_postfix[i] == 'H') || (_postfix[i] == 'V')) {
-        packing_cutline(_postfix[i]);
+      if((postfix[i] == 'H') || (postfix[i] == 'V')) {
+        packing_cutline(postfix[i]);
       }
 
       // integer idx 
       else {
         cluster_t cluster;
-        int idx = _postfix[i] - '0';
+        int idx = postfix[i] - '0';
 
         _modules[idx].llx = 0;
         _modules[idx].lly = 0;
@@ -308,10 +333,12 @@ public:
     _area = (_stack.top()).w * (_stack.top()).h;
     _urx = (_stack.top()).w;
     _ury = (_stack.top()).h;
+
+    return _area;
   }
 
 
-  void packing_cutline(char& cutline) {
+  void packing_cutline(const char& cutline) {
     cluster_t cluster, cluster_r, cluster_l;
     
     cluster_r = _stack.top();
@@ -359,61 +386,96 @@ public:
   }
 
 
-  /*
-  Expression generate_neighbor(const Expression& curr) {
-    // pick up five moves at random
-    Expression prop = curr;
-    switch(rand()%5) {
-      case 0:
-      case 1:
-      ...
+  std::string generate_neighbor(const std::string& postfix_curr) {
+    std::string postfix_prop;
+    //std::srand(std::time(nullptr));
+
+    std::cout << "generate neighbor\n";
+
+    while(1) {
+      switch(std::rand()%5) {
+        case 0:
+          std::cout << "random 0\n";
+          postfix_prop = operand_swap(postfix_curr);
+          break;
+        case 1:
+          std::cout << "random 1\n";
+          postfix_prop = complement_cutline(postfix_curr);
+          break;
+        case 2:
+          std::cout << "random 2\n";
+          postfix_prop = complement_last2cutline(postfix_curr);
+          if(postfix_prop.empty())
+            continue;
+          break;
+        case 3:
+          std::cout << "random 3\n";
+          postfix_prop = operator_operand_swap(postfix_curr);
+          break;
+        case 4:
+          std::cout << "random 4\n";
+          postfix_prop = complement_first2cutline(postfix_curr);
+          if(postfix_prop.empty())
+            continue;
+          break;
+      }
+      break;
     }
-    return prop;
+    std::cout << postfix_prop << '\n';
+    return postfix_prop;
   }
+
 
   // perform optimization
   void optimize() {
     double temperature = 100.0;
 
-    std::string postfix_prop;    
-    //Expression curr, prop, best;
+    std::string postfix_prop;
+    std::string postfix_curr;
+    std::string postfix_best;   
     
     //curr = generate_initial_solution(); // 12V3H4V5H6V...
     
-    best = curr;
+    postfix_curr = _postfix;
+    postfix_best = postfix_curr;
     
-    int area_best = packing(curr);
+    int area_best = packing(postfix_best);
+    int area_curr = area_best;
+          
+    std::random_device rd;
+    std::mt19937 gen(rd());  // expensive - typically construct once
+    std::uniform_real_distribution<> dis(0, 1);
     
     while(temperature > FROZEN) {
       
-      for(int iter = 0; itr < 1000; itr++) {
+      for(int iter = 0; iter < 10; iter++) {
         
-        postfix_prop = generate_neighbor(_postfix);
-        auto area_prop = packing(postfix_prop);
-        auto cost = area_prop - _area;
+        postfix_prop = generate_neighbor(postfix_curr);
         
-        if(area_prop < _area) {
-          _postfix = postfix_prop;
+        int area_prop = packing(postfix_prop);
+        int cost = area_prop - area_curr;
+        
+        if(cost < 0) {
+          postfix_curr = postfix_prop;
           if(area_prop < area_best) {
-            _postfix_best = prop;
+            postfix_best = postfix_prop;
             area_best = area_prop;
           }
         }
 
         else {
           auto prob = std::exp(-cost / temperature); 
-          std::random_device rd;
-          std::mt19937 gen(rd());
-          std::uniform_real_distribution<> dis(0, 1);
           if(prob > dis(gen)) {
-            _postfix = postfix_prop; 
+            postfix_curr = postfix_prop; 
           }
         }
       }
       temperature *= 0.95;  
     }
+
+    _postfix = postfix_best;
   }
-  */
+  
 
 
 private:
@@ -458,13 +520,13 @@ std::vector<module_t> read_modules(const std::string circuit_name) {
 int main(int argc, char* argv[]) {
 
   floorplan fp("./circuits/circuit2.txt", "./circuit2_sol.txt");
-  //fp.run();
+  fp.run();
   //fp.print_modules();
   //std::cout << fp.is_valid_postfix();
   //std::cout << fp.operand_swap() << '\n';
   //std::cout << fp.complement_cutline() << '\n';
   //std::cout << fp.complement_first2cutline() << '\n';
   //fp.chain_invert();
-  std::cout << fp.operator_operand_swap() << '\n';
+  //std::cout << fp.operator_operand_swap() << '\n';
   return 0;
 }
