@@ -446,7 +446,7 @@ public:
     
     while(temperature > FROZEN) {
       
-      for(int iter = 0; iter < 10; iter++) {
+      for(int iter = 0; iter < 1000; iter++) {
         
         postfix_prop = generate_neighbor(postfix_curr);
         
@@ -478,7 +478,8 @@ public:
 
 private:
   //std::string _postfix = "";
-  std::string _postfix = "012345VVVVV";
+  //std::string _postfix = "012345VVVVV";
+  std::string _postfix = "01V2H3V4H5V";
   std::vector<module_t> _modules;
   std::string _input_file;
   std::string _output_file;
