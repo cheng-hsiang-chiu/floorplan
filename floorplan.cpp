@@ -4,6 +4,9 @@
 #include <vector>
 #include <stack>
 #include <algorithm>
+#include <random>
+#include <ctime>
+
 
 
 #define FROZEN 0.1
@@ -134,104 +137,142 @@ public:
   }
 
 
-  // swap two adjacent operands
-  void operand_swap() {
-    int head = 0, tail = 1;
-    
-    while(tail < _postfix.size()) {
-      std::string candidate_postfix = _postfix;
+  // M1: swap two adjacent operands
+  std::string operand_swap() {
+    std::srand(std::time(nullptr));
+    int head, tail;
+    std::string postfix_prop = _postfix;
 
-      char cph = candidate_postfix[head];
-      char cpt = candidate_postfix[tail];
 
-      if((cph != 'H') && (cph != 'V') && (cpt != 'H') && (cpt != 'V')) {
-        std::swap(candidate_postfix[head], candidate_postfix[tail]);
-        head = tail;
-        ++tail;
-        std::cout << candidate_postfix << '\n';
+    while(1) {
+      head = (std::rand()) % (postfix_prop.size()-1);
+      tail = head + 1;
+      
+      char pph = postfix_prop[head];
+
+      if((pph != 'H') && (pph != 'V')) {
+        while(tail < postfix_prop.size()) {
+          char ppt = postfix_prop[tail];
+          if((ppt != 'H') && (ppt != 'V')) {
+            std::swap(postfix_prop[head], postfix_prop[tail]);
+            return postfix_prop;
+          }
+          else {
+            ++tail;
+            continue;
+          }
+        }
+      }
+      else
         continue;
-      }
-      ++tail;
     }
   }
 
 
-  // complement chains 
-  void chain_invert() {
-    for(int i = 0; i < _postfix.size(); ++i) {
-      std::string candidate_postfix = _postfix;
-      if(candidate_postfix[i] == 'H') {
-        if((i+1 < candidate_postfix.size()) &&
-           (candidate_postfix[i+1] != 'H')  &&
-           (candidate_postfix[i+1] != 'V')) {
-          candidate_postfix[i] = 'V';
-          std::cout << candidate_postfix << '\n';
-        }
+  // M2 : complement a cutline
+  std::string complement_cutline() {
+    std::srand(std::time(nullptr));
+    int head;
+    std::string postfix_prop = _postfix;
+
+    while(1) {
+      head = (std::rand()) % (postfix_prop.size()-1);
+      char pph = postfix_prop[head];
+
+      if(pph == 'H') {
+        postfix_prop[head] = 'V';
+        return postfix_prop;
       }
 
-      else if(candidate_postfix[i] == 'V') {
-        if((i+1 < candidate_postfix.size()) &&
-           (candidate_postfix[i+1] != 'H')  &&
-           (candidate_postfix[i+1] != 'V')) {
-          candidate_postfix[i] = 'H';
-          std::cout << candidate_postfix << '\n'; 
-        }
+      else if(pph == 'V') {
+        postfix_prop[head] = 'H';
+        return postfix_prop;
       }
+
+      else
+        continue;
     }
   }
  
- 
-  // swap two adjacent operand and operator
-  void operator_operand_swap() {
-    int head = 0, tail = 1;
 
-    while(tail < _postfix.size()) {
-      std::string candidate_postfix = _postfix;
-    
-      char cph = candidate_postfix[head];
-      char cpt = candidate_postfix[tail];
-
-      // cph is an idx and cpt is a cutline
-      if((cph != 'H') && (cph != 'V')) {
-        if((cpt == 'H') || (cpt == 'V')) {
-          std::swap(candidate_postfix[head], candidate_postfix[tail]);
-          head = tail;
-          ++tail;
-          if(is_valid_postfix(candidate_postfix))
-            std::cout << candidate_postfix << " is valid.\n";
-          else
-            std::cout << candidate_postfix << " is not valid.\n";
-          continue;
-        }
-        else {
-          ++head;
-          ++tail;
-        }
+  // M3 : complement last pair of two cutline
+  std::string complement_last2cutline() {
+    std::string postfix_prop = _postfix;
+  
+    for(int i = postfix_prop.size()-1; i > 0; --i) {
+      if((postfix_prop[i] == 'H') && postfix_prop[i-1] == 'V') {
+        postfix_prop[i] = 'V';
+        postfix_prop[i-1] = 'H';
+        return postfix_prop; 
       }
 
-      else if((cph == 'H') || (cph == 'V')) {
-        if((cpt != 'H') && (cpt != 'V')) {
-          std::swap(candidate_postfix[head], candidate_postfix[tail]);
-          head = tail;
-          ++tail;
-          if(is_valid_postfix(candidate_postfix))
-            std::cout << candidate_postfix << " is valid.\n";
-          else
-            std::cout << candidate_postfix << " is not valid.\n";
-          continue;
-        }
-        else {
-          ++head;
-          ++tail;
-        }
+      if((postfix_prop[i] == 'V') && (postfix_prop[i-1] == 'H')) {
+        postfix_prop[i] = 'H';
+        postfix_prop[i-1] = 'V';
+        return postfix_prop;
       }
-      else {
-        ++head;
-        ++tail;
+    }
+      return {};
+  }
+
+
+  // M4 : swap two adjacent operand and operator
+  std::string operator_operand_swap() {
+    std::srand(std::time(nullptr));
+    int head, tail;
+    std::string postfix_prop = _postfix;
+
+    while(1) {
+      head = (std::rand()) % (postfix_prop.size()-1);
+      tail = head + 1;
+      
+      char pph = postfix_prop[head];
+      char ppt = postfix_prop[tail];
+
+      if((pph == 'H') || (pph == 'V')) {
+        if((ppt != 'H') && (ppt != 'V')) {
+          std::swap(postfix_prop[head], postfix_prop[tail]);
+          if(is_valid_postfix(postfix_prop) == false)
+            continue;
+          else
+            return postfix_prop;
+        }
+        else
+          continue;
+      }
+
+      if((pph != 'H') && (pph != 'V')) {
+        if((pph == 'H') || (pph == 'V')) {
+          std::swap(postfix_prop[head], postfix_prop[tail]);
+          if(is_valid_postfix(postfix_prop) == false)
+            continue;
+          else
+            return postfix_prop;
+        }
       }
     }
   }
   
+  // M5 : complement first pair of two cutline
+  std::string complement_first2cutline() {
+    std::string postfix_prop = _postfix;
+  
+    for(int i = 0; i < postfix_prop.size()-1; ++i) {
+      if((postfix_prop[i] == 'H') && postfix_prop[i+1] == 'V') {
+        postfix_prop[i] = 'V';
+        postfix_prop[i+1] = 'H';
+        return postfix_prop; 
+      }
+
+      if((postfix_prop[i] == 'V') && (postfix_prop[i+1] == 'H')) {
+        postfix_prop[i] = 'H';
+        postfix_prop[i+1] = 'V';
+        return postfix_prop;
+      }
+    }
+      return {};
+  }
+
 
   // update modules' positions
   void packing() {
@@ -265,7 +306,6 @@ public:
     }
 
     _area = (_stack.top()).w * (_stack.top()).h;
-    std::cout << "area  = " << _area << '\n';
     _urx = (_stack.top()).w;
     _ury = (_stack.top()).h;
   }
@@ -318,6 +358,8 @@ public:
     }
   }
 
+
+  /*
   Expression generate_neighbor(const Expression& curr) {
     // pick up five moves at random
     Expression prop = curr;
@@ -332,10 +374,11 @@ public:
   // perform optimization
   void optimize() {
     double temperature = 100.0;
+
+    std::string postfix_prop;    
+    //Expression curr, prop, best;
     
-    Expression curr, prop, best;
-    
-    curr = generate_initial_solution(); // 12V3H4V5H6V...
+    //curr = generate_initial_solution(); // 12V3H4V5H6V...
     
     best = curr;
     
@@ -345,29 +388,32 @@ public:
       
       for(int iter = 0; itr < 1000; itr++) {
         
-        prop = generate_neighbor(curr);
-        auto area_curr = packing(curr);
-        auto area_prop = packing(prop);
-        auto cost = area_prop - area_curr;
+        postfix_prop = generate_neighbor(_postfix);
+        auto area_prop = packing(postfix_prop);
+        auto cost = area_prop - _area;
         
-        if(area_prop < area_curr) {
-           curr = prop;
-           if(area_prop < area_best) {
-             best = prop;
-             area_best = area_prop;
-           }
+        if(area_prop < _area) {
+          _postfix = postfix_prop;
+          if(area_prop < area_best) {
+            _postfix_best = prop;
+            area_best = area_prop;
+          }
         }
+
         else {
           auto prob = std::exp(-cost / temperature); 
-          if(prob > std::uniform_real_distribution(0, 1)) {
-            curr = prop; 
+          std::random_device rd;
+          std::mt19937 gen(rd());
+          std::uniform_real_distribution<> dis(0, 1);
+          if(prob > dis(gen)) {
+            _postfix = postfix_prop; 
           }
         }
       }
-      
       temperature *= 0.95;  
     }
   }
+  */
 
 
 private:
@@ -412,11 +458,13 @@ std::vector<module_t> read_modules(const std::string circuit_name) {
 int main(int argc, char* argv[]) {
 
   floorplan fp("./circuits/circuit2.txt", "./circuit2_sol.txt");
-  fp.run();
-  fp.print_modules();
+  //fp.run();
+  //fp.print_modules();
   //std::cout << fp.is_valid_postfix();
-  //fp.operand_swap();
+  //std::cout << fp.operand_swap() << '\n';
+  //std::cout << fp.complement_cutline() << '\n';
+  //std::cout << fp.complement_first2cutline() << '\n';
   //fp.chain_invert();
-  //fp.operator_operand_swap();
+  std::cout << fp.operator_operand_swap() << '\n';
   return 0;
 }
