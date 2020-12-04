@@ -36,6 +36,8 @@ public:
     : _input_file(input), _output_file(output) {
     _modules = read_modules(_input_file);
 
+    for(int i = 0; i < _modules.size(); ++i)
+      _mapping.push_back(i);
     /*
     // an initial normalized polish expression
     for(int i = 0; i < _modules.size(); ++i) {
@@ -60,7 +62,6 @@ public:
   // execute and generate an output file and its json
   void run() {
     int area = packing(_postfix);
-   
    
     optimize();
     area = packing(_postfix);
@@ -301,6 +302,9 @@ public:
 
   // update modules' positions
   int packing(const std::string& postfix) {
+    while(!_stack.empty())
+      _stack.pop();
+
     int cluster_id = 0;
 
     for(int i = 0; i < postfix.size(); ++i) {
@@ -314,7 +318,7 @@ public:
       else {
         cluster_t cluster;
         int idx = postfix[i] - '0';
-
+        
         _modules[idx].llx = 0;
         _modules[idx].lly = 0;
         cluster.w = _modules[idx].w;
@@ -322,6 +326,7 @@ public:
         cluster.beg = cluster_id;
         cluster.end = cluster_id;
 
+        _mapping[cluster_id] = idx;
         ++cluster_id;
 
         _stack.push(cluster);
@@ -352,7 +357,7 @@ public:
     // horizontal cutline
     if(cutline == 'H') {
       for(int i = cluster_r.beg; i <= cluster_r.end; ++i) {
-        _modules[i].lly += cluster_l.h;
+        _modules[_mapping[i]].lly += cluster_l.h;
       }
 
       cluster.w = (cluster_l.w > cluster_r.w) ? cluster_l.w : cluster_r.w;
@@ -362,7 +367,7 @@ public:
     // vertical cutline
     else {
       for(int i = cluster_r.beg; i <= cluster_r.end; ++i) {
-        _modules[i].llx += cluster_l.w; 
+        _modules[_mapping[i]].llx += cluster_l.w; 
       }
 
       cluster.w = cluster_l.w + cluster_r.w;
@@ -479,13 +484,14 @@ public:
 
 
 private:
-  //std::string _postfix = "31V20HH";
-  std::string _postfix = "012345VHVHV";
+  std::string _postfix = "01V2H3V4H5V";
+  //std::string _postfix = "3145V02VVHV";
   std::vector<module_t> _modules;
   std::string _input_file;
   std::string _output_file;
   std::stack<cluster_t> _stack;
   int _area, _urx, _ury;
+  std::vector<int> _mapping;
 };
 
 
