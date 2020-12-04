@@ -117,10 +117,10 @@ public:
 
   // check if postfix is valid
   bool is_valid_postfix() {
-    std::stack<char> stk;
+    std::stack<int> stk;
     
     for(int i = 0; i < _postfix.size(); ++i) {
-      if((_postfix[i] == 'V') || (_postfix[i] == 'H')) {
+      if(_postfix[i] < 0) {
         if(stk.size() >= 2) { 
           stk.pop();
 
@@ -142,21 +142,21 @@ public:
 
 
   // check if candidate_postfix is valid
-  bool is_valid_postfix(const std::string& str) {
-    std::stack<char> stk;
+  bool is_valid_postfix(const std::vector<int>& expression) {
+    std::stack<int> stk;
     
-    for(int i = 0; i < str.size(); ++i) {
-      if((str[i] == 'V') || (str[i] == 'H')) {
+    for(int i = 0; i < expression.size(); ++i) {
+      if(expression[i] < 0) {
         if(stk.size() >= 2) { 
           stk.pop();
 
-          if(i == str.size()-1)
+          if(i == expression.size()-1)
             stk.pop();
         }
       }
 
       else {
-        stk.push(str[i]);
+        stk.push(expression[i]);
       }
     }
 
@@ -168,22 +168,22 @@ public:
 
 
   // M1: swap two adjacent operands
-  std::string operand_swap(const std::string& postfix_curr) {
+  std::vector<int> operand_swap(const std::vector<int>& postfix_curr) {
     //std::srand(std::time(nullptr));
     int head, tail;
-    std::string postfix_prop = postfix_curr;
+    std::vector<int> postfix_prop = postfix_curr;
 
 
     while(1) {
       head = (std::rand()) % (postfix_prop.size()-1);
       tail = head + 1;
       
-      char pph = postfix_prop[head];
+      int pph = postfix_prop[head];
 
-      if((pph != 'H') && (pph != 'V')) {
+      if(pph >= 0) {
         while(tail < postfix_prop.size()) {
-          char ppt = postfix_prop[tail];
-          if((ppt != 'H') && (ppt != 'V')) {
+          int ppt = postfix_prop[tail];
+          if(ppt >= 0) {
             std::swap(postfix_prop[head], postfix_prop[tail]);
             return postfix_prop;
           }
@@ -200,22 +200,22 @@ public:
 
 
   // M2 : complement a cutline
-  std::string complement_cutline(const std::string& postfix_curr) {
+  std::vector<int> complement_cutline(const std::vector<int>& postfix_curr) {
     //std::srand(std::time(nullptr));
     int head;
-    std::string postfix_prop = postfix_curr;
+    std::vector<int> postfix_prop = postfix_curr;
 
     while(1) {
       head = (std::rand()) % (postfix_prop.size()-1);
-      char pph = postfix_prop[head];
+      int pph = postfix_prop[head];
 
-      if(pph == 'H') {
-        postfix_prop[head] = 'V';
+      if(pph == -2) {
+        postfix_prop[head] = -1;
         return postfix_prop;
       }
 
-      else if(pph == 'V') {
-        postfix_prop[head] = 'H';
+      else if(pph == -1) {
+        postfix_prop[head] = -2;
         return postfix_prop;
       }
 
@@ -226,41 +226,41 @@ public:
  
 
   // M3 : complement last pair of two cutline
-  std::string complement_last2cutline(const std::string& postfix_curr) {
-    std::string postfix_prop = postfix_curr;
+  std::vector<int> complement_last2cutline(const std::vector<int>& postfix_curr) {
+    std::vector<int> postfix_prop = postfix_curr;
   
     for(int i = postfix_prop.size()-1; i > 0; --i) {
-      if((postfix_prop[i] == 'H') && postfix_prop[i-1] == 'V') {
-        postfix_prop[i] = 'V';
-        postfix_prop[i-1] = 'H';
+      if((postfix_prop[i] == -2) && postfix_prop[i-1] == -1) {
+        postfix_prop[i] = -1;
+        postfix_prop[i-1] = -2;
         return postfix_prop; 
       }
 
-      if((postfix_prop[i] == 'V') && (postfix_prop[i-1] == 'H')) {
-        postfix_prop[i] = 'H';
-        postfix_prop[i-1] = 'V';
+      if((postfix_prop[i] == -1) && (postfix_prop[i-1] == -2)) {
+        postfix_prop[i] = -2;
+        postfix_prop[i-1] = -1;
         return postfix_prop;
       }
     }
-      return {};
+    return std::vector<int>();
   }
 
 
   // M4 : swap two adjacent operand and operator
-  std::string operator_operand_swap(const std::string& postfix_curr) {
+  std::vector<int> operator_operand_swap(const std::vector<int>& postfix_curr) {
     //std::srand(std::time(nullptr));
     int head, tail;
-    std::string postfix_prop = postfix_curr;
+    std::vector<int> postfix_prop = postfix_curr;
 
     while(1) {
       head = (std::rand()) % (postfix_prop.size()-2);
       tail = head + 1;
       
-      char pph = postfix_prop[head];
-      char ppt = postfix_prop[tail];
+      int pph = postfix_prop[head];
+      int ppt = postfix_prop[tail];
 
-      if((pph == 'H') || (pph == 'V')) {
-        if((ppt != 'H') && (ppt != 'V')) {
+      if(pph < 0) {
+        if(ppt >= 0) {
           std::swap(postfix_prop[head], postfix_prop[tail]);
           if(is_valid_postfix(postfix_prop) == false)
             continue;
@@ -271,8 +271,8 @@ public:
           continue;
       }
 
-      if((pph != 'H') && (pph != 'V')) {
-        if((ppt == 'H') || (ppt == 'V')) {
+      if(pph >= 0) {
+        if(ppt < 0) {
           std::swap(postfix_prop[head], postfix_prop[tail]);
           if(is_valid_postfix(postfix_prop) == false)
             continue;
@@ -284,36 +284,37 @@ public:
       }
     }
   }
+ 
   
   // M5 : complement first pair of two cutline
-  std::string complement_first2cutline(const std::string& postfix_curr) {
-    std::string postfix_prop = postfix_curr;
+  std::vector<int> complement_first2cutline(const std::vector<int>& postfix_curr) {
+    std::vector<int> postfix_prop = postfix_curr;
   
     for(int i = 0; i < postfix_prop.size()-1; ++i) {
-      if((postfix_prop[i] == 'H') && postfix_prop[i+1] == 'V') {
-        postfix_prop[i] = 'V';
-        postfix_prop[i+1] = 'H';
+      if((postfix_prop[i] == -2) && postfix_prop[i+1] == -1) {
+        postfix_prop[i] = -1;
+        postfix_prop[i+1] = -2;
         return postfix_prop; 
       }
 
-      if((postfix_prop[i] == 'V') && (postfix_prop[i+1] == 'H')) {
-        postfix_prop[i] = 'H';
-        postfix_prop[i+1] = 'V';
+      if((postfix_prop[i] == -1) && (postfix_prop[i+1] == -2)) {
+        postfix_prop[i] = -2;
+        postfix_prop[i+1] = -2;
         return postfix_prop;
       }
     }
-      return {};
+    return std::vector<int>();
   }
 
   
   // M6 : randomly roate one module
-  std::string rotate_module(const std::string& postfix_curr) {
+  std::vector<int> rotate_module(const std::vector<int>& postfix_curr) {
     int head;
 
     while(1) {
       head = (std::rand()) % (postfix_curr.size()-1);
-      if((postfix_curr[head] != 'H') && (postfix_curr[head] != 'V')) {
-        int idx = postfix_curr[head] - '0';
+      if(postfix_curr[head] >= 0) {
+        int idx = postfix_curr[head];
         std::swap(_modules[idx].w, _modules[idx].h); 
 
         return postfix_curr;
@@ -415,8 +416,8 @@ public:
   }
 
 
-  std::string generate_neighbor(const std::string& postfix_curr) {
-    std::string postfix_prop;
+  std::vector<int> generate_neighbor(const std::vector<int>& postfix_curr) {
+    std::vector<int> postfix_prop;
     //std::srand(std::time(nullptr));
 
     while(1) {
@@ -454,9 +455,9 @@ public:
   void optimize() {
     double temperature = 100.0;
 
-    std::string postfix_prop;
-    std::string postfix_curr;
-    std::string postfix_best;   
+    std::vector<int> postfix_prop;
+    std::vector<int> postfix_curr;
+    std::vector<int> postfix_best;   
     
     //curr = generate_initial_solution(); // 12V3H4V5H6V...
     
@@ -470,24 +471,24 @@ public:
     std::mt19937 gen(rd());  // expensive - typically construct once
     std::uniform_real_distribution<> dis(0, 1);
    
-    std::cout << "postfix_curr : " << postfix_curr << '\n'; 
-    std::cout << "postfix_best : " << postfix_best << '\n'; 
+    //std::cout << "postfix_curr : " << postfix_curr << '\n'; 
+    //std::cout << "postfix_best : " << postfix_best << '\n'; 
     std::cout << "area_curr : " << area_curr << '\n';
     std::cout << "area_best : " << area_best << '\n';
     std::cout << "--------------------\n";
 
     while(temperature > FROZEN) {
       
-      for(int iter = 0; iter < 10; iter++) {
+      for(int iter = 0; iter < 10000; iter++) {
         
         postfix_prop = generate_neighbor(postfix_curr);
         
         int area_prop = packing(postfix_prop);
         int cost = area_prop - area_curr;
          
-        std::cout << "postfix_prop : " << postfix_prop << '\n'; 
-        std::cout << "postfix_curr : " << postfix_curr << '\n'; 
-        std::cout << "postfix_best : " << postfix_best << '\n'; 
+        //std::cout << "postfix_prop : " << postfix_prop << '\n'; 
+        //std::cout << "postfix_curr : " << postfix_curr << '\n'; 
+        //std::cout << "postfix_best : " << postfix_best << '\n'; 
         std::cout << "area_best : " << area_best << '\n';
         std::cout << "area_curr : " << area_curr << '\n';
         std::cout << "area_prop : " << area_prop << '\n';
@@ -564,8 +565,8 @@ std::vector<module_t> read_modules(const std::string circuit_name) {
 
 int main(int argc, char* argv[]) {
 
-  floorplan fp("./circuits/circuit_ut1.txt", "./circuit_ut1_sol.txt");
-  //fp.run();
+  floorplan fp("./circuits/circuit5.txt", "./circuit5_sol.txt");
+  fp.run();
   //fp.print_modules();
   //std::cout << fp.is_valid_postfix();
   //std::cout << fp.operand_swap() << '\n';
