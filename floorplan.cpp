@@ -38,24 +38,24 @@ public:
 
     for(int i = 0; i < _modules.size(); ++i)
       _mapping.push_back(i);
-    /*
+
+    
     // an initial normalized polish expression
     for(int i = 0; i < _modules.size(); ++i) {
       if(i == 0) { 
         _postfix.push_back(_modules[i].idx);
-        continue;
       }
-      if(i%2 == 1) {
+      else if(i%2 == 1) {
         _postfix.push_back(_modules[i].idx);
         _postfix.push_back('V');
-        continue;
       }
-      if(i%2 == 0) {
+      else {
         _postfix.push_back(_modules[i].idx);
         _postfix.push_back('H');
-        continue;
       }
-    }*/
+    }
+
+    std::cout << _postfix << '\n';
   }  
 
 
@@ -395,30 +395,23 @@ public:
     std::string postfix_prop;
     //std::srand(std::time(nullptr));
 
-    std::cout << "generate neighbor\n";
-
     while(1) {
       switch(std::rand()%5) {
         case 0:
-          std::cout << "random 0\n";
           postfix_prop = operand_swap(postfix_curr);
           break;
         case 1:
-          std::cout << "random 1\n";
           postfix_prop = complement_cutline(postfix_curr);
           break;
         case 2:
-          std::cout << "random 2\n";
           postfix_prop = complement_last2cutline(postfix_curr);
           if(postfix_prop.empty())
             continue;
           break;
         case 3:
-          std::cout << "random 3\n";
           postfix_prop = operator_operand_swap(postfix_curr);
           break;
         case 4:
-          std::cout << "random 4\n";
           postfix_prop = complement_first2cutline(postfix_curr);
           if(postfix_prop.empty())
             continue;
@@ -426,7 +419,6 @@ public:
       }
       break;
     }
-    std::cout << postfix_prop << '\n';
     return postfix_prop;
   }
 
@@ -484,7 +476,7 @@ public:
 
 
 private:
-  std::string _postfix = "01V2H3V4H5V";
+  std::string _postfix = "";
   //std::string _postfix = "3145V02VVHV";
   std::vector<module_t> _modules;
   std::string _input_file;
