@@ -39,31 +39,36 @@ public:
     for(int i = 0; i < _modules.size(); ++i)
       _mapping.push_back(i);
 
-    /*    
-    // an initial normalized polish expression
-    for(int i = 0; i < _modules.size(); ++i) {
-      if(i == 0) { 
-        _postfix.push_back(_modules[i].idx);
-      }
-      else if(i%2 == 1) {
-        _postfix.push_back(_modules[i].idx);
-        _postfix.push_back('V');
-      }
-      else {
-        _postfix.push_back(_modules[i].idx);
-        _postfix.push_back('H');
-      }
-    }*/
-
-    std::cout << _postfix << '\n';
+    generate_initial_postfix();
   }  
   
+  
+  void generate_initial_postfix() {
+    for(int i = 0; i < _modules.size(); ++i) {
+      if(i == 0) {
+        _postfix.push_back(_modules[i].idx);
+      }
+      // -1 means a vertical cutline
+      else if(i%2 == 1) {
+        _postfix.push_back(_modules[i].idx);
+        _postfix.push_back(-1);
+      }
+      // -2 means a horizontal cutline
+      else {
+        _postfix.push_back(_modules[i].idx);
+        _postfix.push_back(-2);
+      }
+    }
+  }
+
 
   // execute and generate an output file and its json
   void run() {
     int area = packing(_postfix);
    
     optimize();
+    //std::cout << "best postfix : " << _postfix << '\n';
+    _modules = _modules_best;
     area = packing(_postfix);
     
     std::ofstream outfile(_output_file, std::ios::out);
@@ -300,9 +305,27 @@ public:
       return {};
   }
 
+  
+  // M6 : randomly roate one module
+  std::string rotate_module(const std::string& postfix_curr) {
+    int head;
+
+    while(1) {
+      head = (std::rand()) % (postfix_curr.size()-1);
+      if((postfix_curr[head] != 'H') && (postfix_curr[head] != 'V')) {
+        int idx = postfix_curr[head] - '0';
+        std::swap(_modules[idx].w, _modules[idx].h); 
+
+        return postfix_curr;
+      }
+      else
+        continue;
+    }
+  }
+
 
   // update modules' positions
-  int packing(const std::string& postfix) {
+  int packing(const std::vector<int>& postfix) {
     while(!_stack.empty())
       _stack.pop();
 
@@ -310,15 +333,15 @@ public:
 
     for(int i = 0; i < postfix.size(); ++i) {
         
-      // Horizontal cutline
-      if((postfix[i] == 'H') || (postfix[i] == 'V')) {
+      // cutline
+      if((postfix[i] == -1) || (postfix[i] == -2)) {
         packing_cutline(postfix[i]);
       }
 
       // integer idx 
       else {
         cluster_t cluster;
-        int idx = postfix[i] - '0';
+        int idx = postfix[i];
         
         _modules[idx].llx = 0;
         _modules[idx].lly = 0;
@@ -344,7 +367,7 @@ public:
   }
 
 
-  void packing_cutline(const char& cutline) {
+  void packing_cutline(const int& cutline) {
     cluster_t cluster, cluster_r, cluster_l;
     
     cluster_r = _stack.top();
@@ -356,7 +379,7 @@ public:
     cluster.end = cluster_r.end;
 
     // horizontal cutline
-    if(cutline == 'H') {
+    if(cutline == -2) {
       for(int i = cluster_r.beg; i <= cluster_r.end; ++i) {
         _modules[_mapping[i]].lly += cluster_l.h;
       }
@@ -397,7 +420,7 @@ public:
     //std::srand(std::time(nullptr));
 
     while(1) {
-      switch(std::rand()%5) {
+      switch(std::rand()%6) {
         case 0:
           postfix_prop = operand_swap(postfix_curr);
           break;
@@ -416,6 +439,9 @@ public:
           postfix_prop = complement_first2cutline(postfix_curr);
           if(postfix_prop.empty())
             continue;
+          break;
+        case 5:
+          postfix_prop = rotate_module(postfix_curr);
           break;
       }
       break;
@@ -443,28 +469,45 @@ public:
     std::random_device rd;
     std::mt19937 gen(rd());  // expensive - typically construct once
     std::uniform_real_distribution<> dis(0, 1);
-    
+   
+    std::cout << "postfix_curr : " << postfix_curr << '\n'; 
+    std::cout << "postfix_best : " << postfix_best << '\n'; 
+    std::cout << "area_curr : " << area_curr << '\n';
+    std::cout << "area_best : " << area_best << '\n';
+    std::cout << "--------------------\n";
+
     while(temperature > FROZEN) {
       
-      for(int iter = 0; iter < 1000; iter++) {
+      for(int iter = 0; iter < 10; iter++) {
         
         postfix_prop = generate_neighbor(postfix_curr);
         
         int area_prop = packing(postfix_prop);
         int cost = area_prop - area_curr;
-        
+         
+        std::cout << "postfix_prop : " << postfix_prop << '\n'; 
+        std::cout << "postfix_curr : " << postfix_curr << '\n'; 
+        std::cout << "postfix_best : " << postfix_best << '\n'; 
+        std::cout << "area_best : " << area_best << '\n';
+        std::cout << "area_curr : " << area_curr << '\n';
+        std::cout << "area_prop : " << area_prop << '\n';
+        std::cout << "@@@@@@@@@@@@@@@@@@@@@\n";
+
         if(cost < 0) {
           postfix_curr = postfix_prop;
+          area_curr = area_prop;
           if(area_prop < area_best) {
             postfix_best = postfix_prop;
             area_best = area_prop;
+            _modules_best = _modules;
           }
         }
 
         else {
           auto prob = std::exp(-cost / temperature); 
           if(prob > dis(gen)) {
-            postfix_curr = postfix_prop; 
+            postfix_curr = postfix_prop;
+            area_curr = area_prop; 
           }
         }
       }
@@ -478,9 +521,11 @@ public:
 
 private:
   //std::string _postfix = "";
-  //std::string _postfix = "012345VVVVV";
-  std::string _postfix = "01V2H3V4H5V";
+  //std::string _postfix = "0123VVV";
+  //std::string _postfix = "01V2H3V4H5V";
+  std::vector<int> _postfix;
   std::vector<module_t> _modules;
+  std::vector<module_t> _modules_best;
   std::string _input_file;
   std::string _output_file;
   std::stack<cluster_t> _stack;
@@ -519,8 +564,8 @@ std::vector<module_t> read_modules(const std::string circuit_name) {
 
 int main(int argc, char* argv[]) {
 
-  floorplan fp("./circuits/circuit2.txt", "./circuit2_sol.txt");
-  fp.run();
+  floorplan fp("./circuits/circuit_ut1.txt", "./circuit_ut1_sol.txt");
+  //fp.run();
   //fp.print_modules();
   //std::cout << fp.is_valid_postfix();
   //std::cout << fp.operand_swap() << '\n';
