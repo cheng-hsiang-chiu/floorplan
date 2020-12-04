@@ -39,7 +39,7 @@ public:
     for(int i = 0; i < _modules.size(); ++i)
       _mapping.push_back(i);
 
-    
+    /*    
     // an initial normalized polish expression
     for(int i = 0; i < _modules.size(); ++i) {
       if(i == 0) { 
@@ -53,11 +53,11 @@ public:
         _postfix.push_back(_modules[i].idx);
         _postfix.push_back('H');
       }
-    }
+    }*/
 
     std::cout << _postfix << '\n';
   }  
-
+  
 
   // execute and generate an output file and its json
   void run() {
@@ -92,6 +92,7 @@ public:
                  << ",\"lly\":0"
                  << ",\"urx\":" << _urx
                  << ",\"ury\":" << _ury
+                 << ",\"area\":" << _area
                  << ",\"coordinates\":"
                  << "[";
     for(int i = 0; i < _modules.size(); ++i) {
@@ -476,8 +477,8 @@ public:
 
 
 private:
-  std::string _postfix = "";
-  //std::string _postfix = "3145V02VVHV";
+  //std::string _postfix = "";
+  std::string _postfix = "012345VVVVV";
   std::vector<module_t> _modules;
   std::string _input_file;
   std::string _output_file;
