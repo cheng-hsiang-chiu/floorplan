@@ -20,12 +20,9 @@ function placement() {
   var ctx1 = canvas.getContext("2d");
   var ctx2 = canvas.getContext("2d");
 
-  ctx.clear();
-  ctx1.clear();
-  ctx2.clear();
-  //ctx.clearRect(0, 0, canvas.width, canvas.height);
-  //ctx1.clearRect(0, 0, canvas.width, canvas.height);
-  //ctx2.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx1.clearRect(0, 0, canvas.width, canvas.height);
+  ctx2.clearRect(0, 0, canvas.width, canvas.height);
   
   var i;
   for(i = 0; i < obj.coordinates.length; ++i) {
