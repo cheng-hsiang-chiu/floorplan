@@ -59,6 +59,10 @@ public:
         _postfix.push_back(-2);
       }
     }
+
+    for(int i = 0; i < _postfix.size(); ++i)
+      std::cout << _postfix[i] << ' ';
+    std::cout << '\n';
   }
 
 
@@ -141,11 +145,44 @@ public:
   }
 
 
+
+  bool is_valid_postfix(const std::vector<int>& expression) {
+    std::vector<int> operand_count(expression.size(), 0);
+    std::vector<int> operator_count(expression.size(), 0);
+
+    for(int i = 0; i < expression.size(); ++i) {
+      if(expression[i] >= 0) {
+        if(i > 0) {
+          operand_count[i] = operand_count[i-1] + 1;
+          operator_count[i] = operator_count[i-1];
+        }
+        else {
+          operand_count[i] = 1;
+        }
+      }
+      else {
+        if(i > 0) {
+          operator_count[i] = operator_count[i-1] + 1;
+          operand_count[i] = operand_count[i-1];
+        }
+        else {
+          return false;
+        }
+      }
+
+      if(operand_count[i] <= operator_count[i])
+        return false;
+    }
+    return true;
+  }
+
+  /*
   // check if candidate_postfix is valid
   bool is_valid_postfix(const std::vector<int>& expression) {
     std::stack<int> stk;
     
     for(int i = 0; i < expression.size(); ++i) {
+      std::cout << expression[i] << ' ';
       if(expression[i] < 0) {
         if(stk.size() >= 2) { 
           stk.pop();
@@ -159,13 +196,14 @@ public:
         stk.push(expression[i]);
       }
     }
-
+    std::cout << '\n';
+    std::cin.get();
     if(stk.size() == 0)
       return true;
     else
       return false;
   }
-
+  */
 
   // M1: swap two adjacent operands
   std::vector<int> operand_swap(const std::vector<int>& postfix_curr) {
@@ -253,6 +291,7 @@ public:
     std::vector<int> postfix_prop = postfix_curr;
 
     while(1) {
+      //std::cout << "trap here";
       head = (std::rand()) % (postfix_prop.size()-2);
       tail = head + 1;
       
@@ -262,10 +301,15 @@ public:
       if(pph < 0) {
         if(ppt >= 0) {
           std::swap(postfix_prop[head], postfix_prop[tail]);
-          if(is_valid_postfix(postfix_prop) == false)
+          std::cout << "[" << head << "]=" << postfix_prop[head] << " , tail = " << tail << '\n';
+          if(is_valid_postfix(postfix_prop) == false) {
+            //std::cout << "not valid\n";
             continue;
-          else
+          }
+          else {
+            //std::cout << "valid\n";
             return postfix_prop;
+          }
         }
         else
           continue;
@@ -274,10 +318,14 @@ public:
       if(pph >= 0) {
         if(ppt < 0) {
           std::swap(postfix_prop[head], postfix_prop[tail]);
-          if(is_valid_postfix(postfix_prop) == false)
+          if(is_valid_postfix(postfix_prop) == false) {
+            //std::cout << "not valid\n";
             continue;
-          else
+          }
+          else {
+            //std::cout << "valid\n";
             return postfix_prop;
+          }
         }
         else
           continue;
@@ -423,25 +471,31 @@ public:
     while(1) {
       switch(std::rand()%6) {
         case 0:
+          std::cout << "rand 0\n";
           postfix_prop = operand_swap(postfix_curr);
           break;
         case 1:
+          std::cout << "rand 1\n";
           postfix_prop = complement_cutline(postfix_curr);
           break;
         case 2:
+          std::cout << "rand 2\n";
           postfix_prop = complement_last2cutline(postfix_curr);
           if(postfix_prop.empty())
             continue;
           break;
         case 3:
+          std::cout << "rand 3\n";
           postfix_prop = operator_operand_swap(postfix_curr);
           break;
         case 4:
+          std::cout << "rand 4\n";
           postfix_prop = complement_first2cutline(postfix_curr);
           if(postfix_prop.empty())
             continue;
           break;
         case 5:
+          std::cout << "rand 5\n";
           postfix_prop = rotate_module(postfix_curr);
           break;
       }
@@ -473,26 +527,26 @@ public:
    
     //std::cout << "postfix_curr : " << postfix_curr << '\n'; 
     //std::cout << "postfix_best : " << postfix_best << '\n'; 
-    std::cout << "area_curr : " << area_curr << '\n';
-    std::cout << "area_best : " << area_best << '\n';
-    std::cout << "--------------------\n";
+    //std::cout << "area_curr : " << area_curr << '\n';
+    //std::cout << "area_best : " << area_best << '\n';
+    //std::cout << "--------------------\n";
 
     while(temperature > FROZEN) {
       
       for(int iter = 0; iter < 10000; iter++) {
-        
+        std::cout << " stop 1\n";
         postfix_prop = generate_neighbor(postfix_curr);
-        
+        std::cout << " stop 2\n"; 
         int area_prop = packing(postfix_prop);
         int cost = area_prop - area_curr;
-         
+        std::cout << " stop 3\n"; 
         //std::cout << "postfix_prop : " << postfix_prop << '\n'; 
         //std::cout << "postfix_curr : " << postfix_curr << '\n'; 
         //std::cout << "postfix_best : " << postfix_best << '\n'; 
-        std::cout << "area_best : " << area_best << '\n';
-        std::cout << "area_curr : " << area_curr << '\n';
-        std::cout << "area_prop : " << area_prop << '\n';
-        std::cout << "@@@@@@@@@@@@@@@@@@@@@\n";
+        //std::cout << "area_best : " << area_best << '\n';
+        //std::cout << "area_curr : " << area_curr << '\n';
+        //std::cout << "area_prop : " << area_prop << '\n';
+        //std::cout << "@@@@@@@@@@@@@@@@@@@@@\n";
 
         if(cost < 0) {
           postfix_curr = postfix_prop;
