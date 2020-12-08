@@ -10,9 +10,11 @@
 
 
 #define FROZEN 0.1
-#define iteration 1000
+#define iteration 10000
 #define init_temperature 100.0
 
+
+std::vector<int> count(6, 0);
 
 typedef struct MODULE {
   int idx;
@@ -31,6 +33,9 @@ typedef struct CLUSTER {
 
 std::vector<module_t> read_modules(std::string);
 
+std::ostream& operator<< (std::ostream&, const std::vector<int>&);
+
+
 class floorplan {
 public:
   floorplan(std::string input, std::string output) 
@@ -42,6 +47,7 @@ public:
 
     generate_initial_postfix();
   }  
+  
   
   
   void generate_initial_postfix() {
@@ -177,36 +183,8 @@ public:
     return true;
   }
 
-  /*
-  // check if candidate_postfix is valid
-  bool is_valid_postfix(const std::vector<int>& expression) {
-    std::stack<int> stk;
-    
-    for(int i = 0; i < expression.size(); ++i) {
-      std::cout << expression[i] << ' ';
-      if(expression[i] < 0) {
-        if(stk.size() >= 2) { 
-          stk.pop();
-
-          if(i == expression.size()-1)
-            stk.pop();
-        }
-      }
-
-      else {
-        stk.push(expression[i]);
-      }
-    }
-    std::cout << '\n';
-    std::cin.get();
-    if(stk.size() == 0)
-      return true;
-    else
-      return false;
-  }
-  */
-
-  // M1: swap two adjacent operands
+  /* 
+  // M1: swap two adjacent operands, arbitrary operators between allowed
   std::vector<int> operand_swap(const std::vector<int>& postfix_curr) {
     //std::srand(std::time(nullptr));
     int head, tail;
@@ -231,6 +209,34 @@ public:
             continue;
           }
         }
+      }
+      else
+        continue;
+    }
+  }
+  */
+
+  // M1: swap two adjacent operands
+  std::vector<int> operand_swap(const std::vector<int>& postfix_curr) {
+    //std::srand(std::time(nullptr));
+    int head, tail;
+    std::vector<int> postfix_prop = postfix_curr;
+
+
+    while(1) {
+      head = (std::rand()) % (postfix_prop.size()-1);
+      tail = head + 1;
+      
+      int pph = postfix_prop[head];
+      
+      if(tail < postfix_prop.size()) {
+        int ppt = postfix_prop[tail];
+        if((pph >= 0) && (ppt >= 0)) {
+          std::swap(postfix_prop[head], postfix_prop[tail]);
+          return postfix_prop;
+        }
+        else
+          continue;
       }
       else
         continue;
@@ -348,7 +354,7 @@ public:
 
       if((postfix_prop[i] == -1) && (postfix_prop[i+1] == -2)) {
         postfix_prop[i] = -2;
-        postfix_prop[i+1] = -2;
+        postfix_prop[i+1] = -1;
         return postfix_prop;
       }
     }
@@ -472,32 +478,50 @@ public:
     while(1) {
       switch(std::rand()%6) {
         case 0:
-          std::cout << "rand 0\n";
+          std::cout << "rand 0 : \n";
+          std::cout << postfix_curr;
           postfix_prop = operand_swap(postfix_curr);
+          std::cout << postfix_prop;
+          ++count[0];
           break;
         case 1:
-          std::cout << "rand 1\n";
+          std::cout << "rand 1 : \n";
+          std::cout << postfix_curr;
           postfix_prop = complement_cutline(postfix_curr);
+          std::cout << postfix_prop;
+          ++count[1];
           break;
         case 2:
-          std::cout << "rand 2\n";
+          std::cout << "rand 2 : \n";
+          std::cout << postfix_curr;
           postfix_prop = complement_last2cutline(postfix_curr);
           if(postfix_prop.empty())
             continue;
+          std::cout << postfix_prop;
+          ++count[2];
           break;
         case 3:
-          std::cout << "rand 3\n";
+          std::cout << "rand 3 : \n";
+          std::cout << postfix_curr;
           postfix_prop = operator_operand_swap(postfix_curr);
+          std::cout << postfix_prop;
+          ++count[3];
           break;
         case 4:
-          std::cout << "rand 4\n";
+          std::cout << "rand 4 : \n";
+          std::cout << postfix_curr;
           postfix_prop = complement_first2cutline(postfix_curr);
           if(postfix_prop.empty())
             continue;
+          std::cout << postfix_prop;
+          ++count[4];
           break;
         case 5:
-          std::cout << "rand 5\n";
+          std::cout << "rand 5 : \n";
+          std::cout << postfix_curr;
           postfix_prop = rotate_module(postfix_curr);
+          std::cout << postfix_prop;
+          ++count[5];
           break;
       }
       break;
@@ -525,7 +549,8 @@ public:
     std::random_device rd;
     std::mt19937 gen(rd());  // expensive - typically construct once
     std::uniform_real_distribution<> dis(0, 1);
-   
+  
+    std::srand(std::time(nullptr)); 
     //std::cout << "postfix_curr : " << postfix_curr << '\n'; 
     //std::cout << "postfix_best : " << postfix_best << '\n'; 
     //std::cout << "area_curr : " << area_curr << '\n';
@@ -533,21 +558,19 @@ public:
     //std::cout << "--------------------\n";
 
     while(temperature > FROZEN) {
-      
       for(int iter = 0; iter < iteration; iter++) {
-        std::cout << " stop 1\n";
         postfix_prop = generate_neighbor(postfix_curr);
-        std::cout << " stop 2\n"; 
+        
         int area_prop = packing(postfix_prop);
         int cost = area_prop - area_curr;
-        std::cout << " stop 3\n"; 
+        
         //std::cout << "postfix_prop : " << postfix_prop << '\n'; 
         //std::cout << "postfix_curr : " << postfix_curr << '\n'; 
         //std::cout << "postfix_best : " << postfix_best << '\n'; 
-        std::cout << "area_best : " << area_best << '\n';
-        std::cout << "area_curr : " << area_curr << '\n';
-        std::cout << "area_prop : " << area_prop << '\n';
-        std::cout << "@@@@@@@@@@@@@@@@@@@@@\n";
+        //std::cout << "area_best : " << area_best << '\n';
+        //std::cout << "area_curr : " << area_curr << '\n';
+        //std::cout << "area_prop : " << area_prop << '\n';
+        //std::cout << "@@@@@@@@@@@@@@@@@@@@@\n";
 
         if(cost < 0) {
           postfix_curr = postfix_prop;
@@ -573,7 +596,6 @@ public:
     _postfix = postfix_best;
   }
   
-
 
 private:
   //std::string _postfix = "";
@@ -618,6 +640,17 @@ std::vector<module_t> read_modules(const std::string circuit_name) {
 
 
 
+std::ostream& operator<< (std::ostream &out, const std::vector<int>& vec) {
+  for(int i = 0; i < vec.size(); ++i) {
+    out << vec[i] << ' ';
+  }
+  out << '\n';
+ 
+  return out; 
+}
+
+
+
 int main(int argc, char* argv[]) {
   std::string inputfile = argv[1];
   std::string outputfile = argv[2];
@@ -632,5 +665,6 @@ int main(int argc, char* argv[]) {
   //std::cout << fp.complement_first2cutline() << '\n';
   //fp.chain_invert();
   //std::cout << fp.operator_operand_swap() << '\n';
+  std::cout << count;
   return 0;
 }
