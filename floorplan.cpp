@@ -10,7 +10,8 @@
 
 
 #define FROZEN 0.1
-
+#define iteration 1000
+#define init_temperature 100.0
 
 
 typedef struct MODULE {
@@ -301,7 +302,7 @@ public:
       if(pph < 0) {
         if(ppt >= 0) {
           std::swap(postfix_prop[head], postfix_prop[tail]);
-          std::cout << "[" << head << "]=" << postfix_prop[head] << " , tail = " << tail << '\n';
+          //std::cout << "[" << head << "]=" << postfix_prop[head] << " , tail = " << tail << '\n';
           if(is_valid_postfix(postfix_prop) == false) {
             //std::cout << "not valid\n";
             continue;
@@ -507,7 +508,7 @@ public:
 
   // perform optimization
   void optimize() {
-    double temperature = 100.0;
+    double temperature = init_temperature;
 
     std::vector<int> postfix_prop;
     std::vector<int> postfix_curr;
@@ -533,7 +534,7 @@ public:
 
     while(temperature > FROZEN) {
       
-      for(int iter = 0; iter < 10000; iter++) {
+      for(int iter = 0; iter < iteration; iter++) {
         std::cout << " stop 1\n";
         postfix_prop = generate_neighbor(postfix_curr);
         std::cout << " stop 2\n"; 
@@ -543,10 +544,10 @@ public:
         //std::cout << "postfix_prop : " << postfix_prop << '\n'; 
         //std::cout << "postfix_curr : " << postfix_curr << '\n'; 
         //std::cout << "postfix_best : " << postfix_best << '\n'; 
-        //std::cout << "area_best : " << area_best << '\n';
-        //std::cout << "area_curr : " << area_curr << '\n';
-        //std::cout << "area_prop : " << area_prop << '\n';
-        //std::cout << "@@@@@@@@@@@@@@@@@@@@@\n";
+        std::cout << "area_best : " << area_best << '\n';
+        std::cout << "area_curr : " << area_curr << '\n';
+        std::cout << "area_prop : " << area_prop << '\n';
+        std::cout << "@@@@@@@@@@@@@@@@@@@@@\n";
 
         if(cost < 0) {
           postfix_curr = postfix_prop;
@@ -618,8 +619,11 @@ std::vector<module_t> read_modules(const std::string circuit_name) {
 
 
 int main(int argc, char* argv[]) {
+  std::string inputfile = argv[1];
+  std::string outputfile = argv[2];
 
-  floorplan fp("./circuits/circuit5.txt", "./circuit5_sol.txt");
+  //floorplan fp("./circuits/circuit4.txt", "./circuit4_sol.txt");
+  floorplan fp(inputfile, outputfile);
   fp.run();
   //fp.print_modules();
   //std::cout << fp.is_valid_postfix();
