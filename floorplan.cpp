@@ -296,26 +296,29 @@ public:
     //std::srand(std::time(nullptr));
     int head, tail;
     std::vector<int> postfix_prop = postfix_curr;
+    std::vector<int> postfix_prop_temp = postfix_curr;
 
     while(1) {
       //std::cout << "trap here";
-      head = (std::rand()) % (postfix_prop.size()-2);
+      head = (std::rand()) % (postfix_prop.size()-1);
       tail = head + 1;
-      
+     
+      std::cout << "head = " << head << '\n'; 
       int pph = postfix_prop[head];
       int ppt = postfix_prop[tail];
 
       if(pph < 0) {
         if(ppt >= 0) {
-          std::swap(postfix_prop[head], postfix_prop[tail]);
+          std::swap(postfix_prop_temp[head], postfix_prop_temp[tail]);
           //std::cout << "[" << head << "]=" << postfix_prop[head] << " , tail = " << tail << '\n';
-          if(is_valid_postfix(postfix_prop) == false) {
+          if(is_valid_postfix(postfix_prop_temp) == false) {
             //std::cout << "not valid\n";
+            postfix_prop_temp = postfix_prop;
             continue;
           }
           else {
             //std::cout << "valid\n";
-            return postfix_prop;
+            return postfix_prop_temp;
           }
         }
         else
@@ -324,14 +327,15 @@ public:
 
       if(pph >= 0) {
         if(ppt < 0) {
-          std::swap(postfix_prop[head], postfix_prop[tail]);
-          if(is_valid_postfix(postfix_prop) == false) {
+          std::swap(postfix_prop_temp[head], postfix_prop_temp[tail]);
+          if(is_valid_postfix(postfix_prop_temp) == false) {
             //std::cout << "not valid\n";
+            postfix_prop_temp = postfix_prop;
             continue;
           }
           else {
             //std::cout << "valid\n";
-            return postfix_prop;
+            return postfix_prop_temp;
           }
         }
         else
