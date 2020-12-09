@@ -7,13 +7,25 @@
 #include <random>
 #include <ctime>
 #include <cstdlib>
+#include <map>
+#include <cmath>
 
 
-#define FROZEN 0.1
-#define iteration 10000
-#define init_temperature 100.0
+
+//#define FROZEN 0.1
+//#define iteration 1000
+//#define init_temperature 100.0
+#define random_moves 60
+#define P 0.99
+#define t0 -1
+
+double FROZEN, temperature;
+int iteration;
 
 
+
+
+int accept = 0;
 std::vector<int> count(6, 0);
 
 typedef struct MODULE {
@@ -45,43 +57,63 @@ public:
     for(int i = 0; i < _modules.size(); ++i)
       _mapping.push_back(i);
 
+    sort_modules_area();
     generate_initial_postfix();
   }  
   
+  void sort_modules_area() {
+    //std::vector<std::pair<int, int>> area;
+
+    for(int i = 0; i < _modules.size(); ++i)
+      _sorted_modules_area.push_back(std::pair(i, _modules[i].w * _modules[i].h));
+
+    std::sort(_sorted_modules_area.begin(), 
+              _sorted_modules_area.end(), 
+              [](std::pair<int, int>& i, std::pair<int, int>& j){
+      return i.second < j.second;
+      });  
+    
+    /*    
+    for(int i = 0; i < _sorted_modules_area.size(); ++i)
+      std::cout << _sorted_modules_area[i].first << ' ';
+    std::cout << '\n';
+    */
+  }
   
   
   void generate_initial_postfix() {
-    for(int i = 0; i < _modules.size(); ++i) {
+    for(int i = 0; i < _sorted_modules_area.size(); ++i) {
       if(i == 0) {
-        _postfix.push_back(_modules[i].idx);
+        _postfix.push_back(_sorted_modules_area[i].first);
       }
       // -1 means a vertical cutline
       else if(i%2 == 1) {
-        _postfix.push_back(_modules[i].idx);
+        _postfix.push_back(_sorted_modules_area[i].first);
         _postfix.push_back(-1);
       }
       // -2 means a horizontal cutline
       else {
-        _postfix.push_back(_modules[i].idx);
+        _postfix.push_back(_sorted_modules_area[i].first);
         _postfix.push_back(-2);
       }
     }
-
+    /*
     for(int i = 0; i < _postfix.size(); ++i)
       std::cout << _postfix[i] << ' ';
     std::cout << '\n';
+    */
   }
 
 
   // execute and generate an output file and its json
   void run() {
-    int area = packing(_postfix);
-   
+    //int area = packing(_postfix);
+    temperature = calculate_initial_temperature();   
     optimize();
     //std::cout << "best postfix : " << _postfix << '\n';
     _modules = _modules_best;
-    area = packing(_postfix);
-    
+    int area = packing(_postfix);
+    std::cout <<'\n' <<  _postfix << '\n';
     std::ofstream outfile(_output_file, std::ios::out);
 
     if(!outfile)
@@ -183,7 +215,7 @@ public:
     return true;
   }
 
-  /* 
+   
   // M1: swap two adjacent operands, arbitrary operators between allowed
   std::vector<int> operand_swap(const std::vector<int>& postfix_curr) {
     //std::srand(std::time(nullptr));
@@ -214,8 +246,9 @@ public:
         continue;
     }
   }
-  */
+  
 
+  /*
   // M1: swap two adjacent operands
   std::vector<int> operand_swap(const std::vector<int>& postfix_curr) {
     //std::srand(std::time(nullptr));
@@ -242,7 +275,7 @@ public:
         continue;
     }
   }
-
+  */
 
   // M2 : complement a cutline
   std::vector<int> complement_cutline(const std::vector<int>& postfix_curr) {
@@ -270,12 +303,13 @@ public:
   }
  
 
-  // M3 : complement last pair of two cutline
+  /*
+  // M3 : complement last pair of two cutlines, consecutive cutlines must be different
   std::vector<int> complement_last2cutline(const std::vector<int>& postfix_curr) {
     std::vector<int> postfix_prop = postfix_curr;
   
     for(int i = postfix_prop.size()-1; i > 0; --i) {
-      if((postfix_prop[i] == -2) && postfix_prop[i-1] == -1) {
+      if((postfix_prop[i] == -2) && (postfix_prop[i-1] == -1)) {
         postfix_prop[i] = -1;
         postfix_prop[i-1] = -2;
         return postfix_prop; 
@@ -289,8 +323,34 @@ public:
     }
     return std::vector<int>();
   }
+  */
 
 
+  // M3 : complement last pair of two cutlines
+  std::vector<int> complement_last2cutline(const std::vector<int>& postfix_curr) {
+    std::vector<int> postfix_prop = postfix_curr;
+  
+    for(int i = postfix_prop.size()-1; i > 0; --i) {
+      if((postfix_prop[i] < 0) && (postfix_prop[i-1] < 0)) {
+        if(postfix_prop[i] == -1)
+          postfix_prop[i] = -2;
+        else
+          postfix_prop[i] = -1;
+
+        if(postfix_prop[i-1] == -1)
+          postfix_prop[i-1] = -2;
+        else
+          postfix_prop[i-1] = -1;
+
+        return postfix_prop;
+      }
+      else
+        continue;
+    }
+    return std::vector<int>();
+  }
+  
+  
   // M4 : swap two adjacent operand and operator
   std::vector<int> operator_operand_swap(const std::vector<int>& postfix_curr) {
     //std::srand(std::time(nullptr));
@@ -303,7 +363,7 @@ public:
       head = (std::rand()) % (postfix_prop.size()-1);
       tail = head + 1;
      
-      std::cout << "head = " << head << '\n'; 
+      //std::cout << "head = " << head << '\n'; 
       int pph = postfix_prop[head];
       int ppt = postfix_prop[tail];
 
@@ -345,12 +405,13 @@ public:
   }
  
   
-  // M5 : complement first pair of two cutline
+  /* 
+  // M5 : complement first pair of two cutlines, consecutive cutlines must be different
   std::vector<int> complement_first2cutline(const std::vector<int>& postfix_curr) {
     std::vector<int> postfix_prop = postfix_curr;
   
     for(int i = 0; i < postfix_prop.size()-1; ++i) {
-      if((postfix_prop[i] == -2) && postfix_prop[i+1] == -1) {
+      if((postfix_prop[i] == -2) && (postfix_prop[i+1] == -1)) {
         postfix_prop[i] = -1;
         postfix_prop[i+1] = -2;
         return postfix_prop; 
@@ -364,7 +425,35 @@ public:
     }
     return std::vector<int>();
   }
+  */
+  
 
+  // M5 : complement first pair of two cutlines, consecutive cutlines must be different
+  std::vector<int> complement_first2cutline(const std::vector<int>& postfix_curr) {
+    std::vector<int> postfix_prop = postfix_curr;
+  
+    for(int i = 0; i < postfix_prop.size()-1; ++i) {
+      if((postfix_prop[i] < 0) && (postfix_prop[i+1] < 0)) {
+        if(postfix_prop[i] == -1)
+          postfix_prop[i] = -2;
+        else
+          postfix_prop[i] = -1;
+
+        if(postfix_prop[i+1] == -1)
+          postfix_prop[i] = -2;
+        else
+          postfix_prop[i] = -1;
+
+        return postfix_prop; 
+      }
+
+      else
+        continue;
+
+    }
+    return std::vector<int>();
+  }
+  
   
   // M6 : randomly roate one module
   std::vector<int> rotate_module(const std::vector<int>& postfix_curr) {
@@ -499,10 +588,10 @@ public:
           std::cout << "rand 2 : \n";
           std::cout << postfix_curr;
           postfix_prop = complement_last2cutline(postfix_curr);
+          ++count[2];
           if(postfix_prop.empty())
             continue;
           std::cout << postfix_prop;
-          ++count[2];
           break;
         case 3:
           std::cout << "rand 3 : \n";
@@ -515,10 +604,10 @@ public:
           std::cout << "rand 4 : \n";
           std::cout << postfix_curr;
           postfix_prop = complement_first2cutline(postfix_curr);
+          ++count[4];
           if(postfix_prop.empty())
             continue;
           std::cout << postfix_prop;
-          ++count[4];
           break;
         case 5:
           std::cout << "rand 5 : \n";
@@ -536,7 +625,7 @@ public:
 
   // perform optimization
   void optimize() {
-    double temperature = init_temperature;
+    //double temperature = init_temperature;
 
     std::vector<int> postfix_prop;
     std::vector<int> postfix_curr;
@@ -591,6 +680,7 @@ public:
           if(prob > dis(gen)) {
             postfix_curr = postfix_prop;
             area_curr = area_prop; 
+            ++accept;
           }
         }
       }
@@ -601,6 +691,34 @@ public:
   }
   
 
+  float calculate_initial_temperature() {
+    int num_moves = 0;
+    double total_area_change = 0.0;
+    double delta_area, avg_area_change, init_temperature;
+
+    std::vector<int> postfix_curr = _postfix;
+    std::vector<int> postfix_prop;
+
+    int area_curr = packing(postfix_curr);
+    int area_prop;
+
+    while(num_moves < random_moves) {
+      postfix_prop = generate_neighbor(postfix_curr);
+
+      area_prop = packing(postfix_prop);
+      delta_area = area_prop - area_curr;
+      area_curr = area_prop;
+
+      total_area_change += abs(delta_area);
+      ++num_moves;
+    }
+
+    avg_area_change = total_area_change / num_moves;
+    init_temperature = P < 1 ? (t0 * avg_area_change) / log(P) : avg_area_change / log(P);
+
+    return init_temperature;
+  }
+
 private:
   //std::string _postfix = "";
   //std::string _postfix = "0123VVV";
@@ -608,6 +726,7 @@ private:
   std::vector<int> _postfix;
   std::vector<module_t> _modules;
   std::vector<module_t> _modules_best;
+  std::vector<std::pair<int, int>> _sorted_modules_area;
   std::string _input_file;
   std::string _output_file;
   std::stack<cluster_t> _stack;
@@ -658,10 +777,15 @@ std::ostream& operator<< (std::ostream &out, const std::vector<int>& vec) {
 int main(int argc, char* argv[]) {
   std::string inputfile = argv[1];
   std::string outputfile = argv[2];
+  iteration = std::stoi(argv[3]);
+  temperature = std::stod(argv[4]);
+  FROZEN = std::stod(argv[5]);
 
   //floorplan fp("./circuits/circuit4.txt", "./circuit4_sol.txt");
   floorplan fp(inputfile, outputfile);
+  //fp.sort_modules_size();
   fp.run();
+  //std::cout << fp.calculate_initial_temperature() << '\n';
   //fp.print_modules();
   //std::cout << fp.is_valid_postfix();
   //std::cout << fp.operand_swap() << '\n';
@@ -670,5 +794,6 @@ int main(int argc, char* argv[]) {
   //fp.chain_invert();
   //std::cout << fp.operator_operand_swap() << '\n';
   std::cout << count;
+  //std::cout << accept << '\n';
   return 0;
 }
