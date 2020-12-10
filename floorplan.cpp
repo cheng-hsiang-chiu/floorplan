@@ -22,9 +22,6 @@
 double FROZEN, temperature;
 int iteration;
 
-
-
-
 int accept = 0;
 std::vector<int> count(6, 0);
 
@@ -33,8 +30,6 @@ typedef struct MODULE {
   int llx, lly;
   int w, h;
 }module_t;
-
-
 
 typedef struct CLUSTER {
   int beg, end;
@@ -47,9 +42,13 @@ std::vector<module_t> read_modules(std::string);
 
 std::ostream& operator<< (std::ostream&, const std::vector<int>&);
 
-
+// TODO: class name => Floorplan 
 class floorplan {
+
 public:
+  
+  // TODO: remove output 
+  // RAII style programming is ALWAYS better than anything else ...
   floorplan(std::string input, std::string output) 
     : _input_file(input), _output_file(output) {
     _modules = read_modules(_input_file);
@@ -61,6 +60,8 @@ public:
     generate_initial_postfix();
   }  
   
+
+  // TODO: make it private
   void sort_modules_area() {
     //std::vector<std::pair<int, int>> area;
 
@@ -80,7 +81,8 @@ public:
     */
   }
   
-  
+  // TODO: do you need the user to call the function?
+  // if no, put it in private scope
   void generate_initial_postfix() {
     for(int i = 0; i < _sorted_modules_area.size(); ++i) {
       if(i == 0) {
@@ -106,6 +108,10 @@ public:
 
 
   // execute and generate an output file and its json
+  // TODO: add parameters to the argument
+  // max_iters_per_temp
+  // init_temp
+  // frozen_temp
   void run() {
     //int area = packing(_postfix);
     temperature = calculate_initial_temperature();   
@@ -157,9 +163,16 @@ public:
     outfile_json << "]}";
   }
 
+  // TODO: dump
+  // std::ofstream ofs("myoutput"); fp.dump(ofs);
+  // fp.dump(std::cout);
+  void dump(std::ostream& os) const {
+    os << ...
+  }
 
+  // TODO: const?
   // check if postfix is valid
-  bool is_valid_postfix() {
+  bool is_valid_postfix() const {
     std::stack<int> stk;
     
     for(int i = 0; i < _postfix.size(); ++i) {
@@ -182,10 +195,9 @@ public:
     else
       return false;
   }
-
-
-
-  bool is_valid_postfix(const std::vector<int>& expression) {
+  
+  // TODO: const?
+  bool is_valid_postfix(const std::vector<int>& expression) const {
     std::vector<int> operand_count(expression.size(), 0);
     std::vector<int> operator_count(expression.size(), 0);
 
@@ -217,6 +229,16 @@ public:
 
    
   // M1: swap two adjacent operands, arbitrary operators between allowed
+  // TODO: no need to create a new vector everytime ...
+  // change the api to the following:
+  // also, I think you ultimately need only three expressions
+  //   1. curr
+  //   2. prop
+  //   3. best
+  void _operand_swap(const std::vector<int>& curr,
+                     std::vector<int>& prop) const {
+  }
+  //
   std::vector<int> operand_swap(const std::vector<int>& postfix_curr) {
     //std::srand(std::time(nullptr));
     int head, tail;
@@ -276,7 +298,8 @@ public:
     }
   }
   */
-
+  
+  // TODO: no need to create a new vector everytime
   // M2 : complement a cutline
   std::vector<int> complement_cutline(const std::vector<int>& postfix_curr) {
     //std::srand(std::time(nullptr));
@@ -325,7 +348,7 @@ public:
   }
   */
 
-
+  // TODO no need to create a vector everytime
   // M3 : complement last pair of two cutlines
   std::vector<int> complement_last2cutline(const std::vector<int>& postfix_curr) {
     std::vector<int> postfix_prop = postfix_curr;
@@ -351,6 +374,7 @@ public:
   }
   
   
+  // TODO
   // M4 : swap two adjacent operand and operator
   std::vector<int> operator_operand_swap(const std::vector<int>& postfix_curr) {
     //std::srand(std::time(nullptr));
@@ -472,7 +496,7 @@ public:
     }
   }
 
-
+  // TODO: should be pack not packing
   // update modules' positions
   int packing(const std::vector<int>& postfix) {
     while(!_stack.empty())
@@ -552,14 +576,14 @@ public:
 
 
   // print out the read in modules
-  void print_modules() {
+  void print_modules(std::ostream& os) {
     for(int i = 0; i < _modules.size(); ++i) {
-      std::cout << "module[" << _modules[i].idx
-                << "] has weight = " << _modules[i].w
-                << " and height = "  << _modules[i].h
-                << ", located at ("   << _modules[i].llx
-                << ", " << _modules[i].lly
-                << ")\n"; 
+      os << "module[" << _modules[i].idx
+         << "] has weight = " << _modules[i].w
+         << " and height = "  << _modules[i].h
+         << ", located at ("   << _modules[i].llx
+         << ", " << _modules[i].lly
+         << ")\n"; 
     }
   }
 
@@ -737,7 +761,7 @@ private:
 
 
 
-std::vector<module_t> read_modules(const std::string circuit_name) {
+std::vector<module_t> read_modules(const std::string& circuit_name) {
   std::ifstream infile(circuit_name, std::ios::in);
   
   if(!infile)
@@ -775,11 +799,33 @@ std::ostream& operator<< (std::ostream &out, const std::vector<int>& vec) {
 
 
 int main(int argc, char* argv[]) {
+
+  // TODO:
+  if(argc < ?) {
+    std::cerr << "usage: ./floorplan ..\n";
+    std::exit(EXIT_FAILURE);
+  }
+
   std::string inputfile = argv[1];
   std::string outputfile = argv[2];
   iteration = std::stoi(argv[3]);
   temperature = std::stod(argv[4]);
   FROZEN = std::stod(argv[5]);
+
+  // TODO
+  floorplan fp(inputfile);
+  //fp.open();
+  fp.optimize(
+    max_iterations_per_temperature, init_temperature, frozen_temperature 
+  );  
+
+  fp.dump(std::cout);
+
+  floorplan fp1, fp2, fp3, fp4;
+  fp1.optimize
+  fp2.optimize
+  ...
+
 
   //floorplan fp("./circuits/circuit4.txt", "./circuit4_sol.txt");
   floorplan fp(inputfile, outputfile);
