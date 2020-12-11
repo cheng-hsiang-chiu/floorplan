@@ -1,4 +1,4 @@
-inputname = circuit_ut4
+inputname = circuit1
 
 inputfile := ./circuits/$(inputname).txt
 
