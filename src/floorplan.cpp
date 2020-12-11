@@ -16,6 +16,9 @@
 #define P 0.99
 #define t0 -1
 
+// TODO
+namespace fp {
+
 int accept = 0;
 std::vector<int> count(6, 0);
 
@@ -771,7 +774,7 @@ private:
 };
 
 
-
+}; // end of namespace fp
 
 
 std::ostream& operator<< (std::ostream &out, const std::vector<int>& vec) {

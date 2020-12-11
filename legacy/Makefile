@@ -16,7 +16,7 @@ floorplan: floorplan.cpp
 # fifth argument is FROZEN
 execution: floorplan
 	./floorplan $(inputfile) $(outputfile) 1000 100.0 0.01
-	cat $(outputfilejson)
+	#cat $(outputfilejson)
 
 clean:
 	rm -f floorplan
