@@ -358,7 +358,7 @@ private:
   
   
   // check if postfix is valid
-  bool _is_valid_postfix() const {
+  bool _is_valid_expression() const {
     std::stack<int> stk;
     
     for(int i = 0; i < _expression.size(); ++i) {
@@ -382,7 +382,7 @@ private:
       return false;
   }
   
-  bool _is_valid_postfix(const std::vector<int>& expression) const {
+  bool _is_valid_expression(const std::vector<int>& expression) const {
     std::vector<int> operand_count(expression.size(), 0);
     std::vector<int> operator_count(expression.size(), 0);
 
@@ -614,7 +614,7 @@ private:
         if(ppt >= 0) {
           std::swap(prop[head], prop[tail]);
           //std::cout << "[" << head << "]=" << postfix_prop[head] << " , tail = " << tail << '\n';
-          if(_is_valid_postfix(prop) == false) {
+          if(_is_valid_expression(prop) == false) {
             //std::cout << "not valid\n";
             prop = curr;
             continue;
@@ -631,7 +631,7 @@ private:
       if(pph >= 0) {
         if(ppt < 0) {
           std::swap(prop[head],prop[tail]);
-          if(_is_valid_postfix(prop) == false) {
+          if(_is_valid_expression(prop) == false) {
             //std::cout << "not valid\n";
             prop = curr;
             continue;
@@ -816,7 +816,7 @@ int main(int argc, char* argv[]) {
   //fp.run();
   //std::cout << fp.calculate_initial_temperature() << '\n';
   //fp.print_modules();
-  //std::cout << fp.is_valid_postfix();
+  //std::cout << fp.is_valid_expression();
   //std::cout << fp.operand_swap() << '\n';
   //std::cout << fp.complement_cutline() << '\n';
   //std::cout << fp.complement_first2cutline() << '\n';
