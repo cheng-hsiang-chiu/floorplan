@@ -21,13 +21,15 @@ set(FP_DEFAULT_BUILD_TYPE "Release")
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 ## TODO define the executables ----------------------------------------
-#add_executable(floorplan ${FP_SRC_DIR}/floorplan.cpp)
+add_executable(Floorplan ${FP_SRC_DIR}/main.cpp)
 
 ## please study this
 ##target_link_libraries(
 ##  ${example} ${PROJECT_NAME} tf::default_settings
 ##)
+target_link_libraries(Floorplan fplib)
 
+add_subdirectory(${FP_SRC_DIR})
 
 ## TODO define unittest
 # -----------------------------------------------------------------------------
