@@ -385,8 +385,7 @@ void fp::Floorplan::_complement_cutline(std::vector<int>& prop) const {
   }
 }
  
-/*
-// TODO no need to create a vector everytime
+
 // M3 : complement last pair of two cutlines
 bool fp::Floorplan::_complement_last2cutline(std::vector<int>& prop) const {
   
@@ -410,7 +409,7 @@ bool fp::Floorplan::_complement_last2cutline(std::vector<int>& prop) const {
   return false;
 }
   
-  
+/*  
 // TODO
 // M4 : swap two adjacent operand and operator
 void fp::Floorplan::_operator_operand_swap(const std::vector<int>& curr,
@@ -595,4 +594,9 @@ bool fp::FloorplanTester::operand_swap(std::vector<int>& prop) {
 bool fp::FloorplanTester::complement_cutline(std::vector<int>& prop) {
   _fp_obj._complement_cutline(prop);
   return _fp_obj._is_valid_expression(prop);
+}
+
+
+bool fp::FloorplanTester::complement_last2cutline(std::vector<int>& prop) {
+  return _fp_obj._complement_last2cutline(prop);
 }

@@ -103,6 +103,8 @@ private:
   void _operand_swap(std::vector<int>& prop);
   
   void _complement_cutline(std::vector<int>& prop) const;
+  
+  bool _complement_last2cutline(std::vector<int>& prop) const;
 /*
   void _simulated_annealing(const int& max_iterations_per_temperature,
                             const double& initial_temperature,
@@ -110,7 +112,6 @@ private:
   
 
 
-  bool _complement_last2cutline(std::vector<int>& prop) const;
 
   void _operator_operand_swap(const std::vector<int>& curr,
                               std::vector<int>& prop) const;
@@ -134,6 +135,8 @@ public:
   bool operand_swap(std::vector<int>& prop);
  
   bool complement_cutline(std::vector<int>& prop);
+
+  bool complement_last2cutline(std::vector<int>& prop);
 
 private:
   Floorplan _fp_obj;
