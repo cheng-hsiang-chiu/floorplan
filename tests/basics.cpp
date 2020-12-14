@@ -123,6 +123,18 @@ TEST_CASE("testing pack" * doctest::timeout(300)) {
 }
 
 
+TEST_CASE("testing sorted_modules_wrt_area" * doctest::timeout(300)) {
+  fp::FloorplanTester tester;
+ 
+  tester.sort_modules_wrt_area();
+   
+  REQUIRE(tester.tester_sorted_modules_area[0] == 1);
+  REQUIRE(tester.tester_sorted_modules_area[1] == 0);
+  REQUIRE(tester.tester_sorted_modules_area[2] == 2);
+  REQUIRE(tester.tester_sorted_modules_area[3] == 3);
+}
+
+
 // TODO: complete the following unittests
 // 1. is_valid_expression?
 // 2. pack

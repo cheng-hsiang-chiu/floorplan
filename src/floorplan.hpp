@@ -93,11 +93,11 @@ private:
 
   int _area, _urx, _ury;
   
+
+
   void _sort_modules_wrt_area();
 
   void _generate_initial_expression();
-
-
 
   double _calculate_initial_temperature();
   
@@ -131,6 +131,8 @@ private:
 class FloorplanTester {
 
 public:
+  std::vector<int> tester_sorted_modules_area;
+  
   FloorplanTester();
 
   bool is_valid_expression(const std::vector<int>& expression) const;
@@ -150,8 +152,10 @@ public:
   
   int pack(const std::vector<int>& expression);
 
+  void sort_modules_wrt_area();
+
 private:
-  Floorplan _fp_obj;
+  Floorplan _tester_fp;
 };
 
 } // end of namespace fp

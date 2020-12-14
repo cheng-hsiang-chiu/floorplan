@@ -64,7 +64,7 @@ void fp::Floorplan::open(const std::string& input_file) {
 }
 
 
-// dump floor plan to cout
+// dump floor plan to console
 void fp::Floorplan::dump(std::ostream& os) const {
   os << "0 0 " << _urx << " " << _ury << '\n';
   
@@ -634,48 +634,57 @@ void fp::Floorplan::_generate_neighbor(const std::vector<int>& curr,
 // the following definitions are used for testing purposes
 
 fp::FloorplanTester::FloorplanTester() {
-  fp::Floorplan _fp_obj;
+  fp::Floorplan _tester_fp;
 }
+
+void fp::FloorplanTester::sort_modules_wrt_area() {
+  _tester_fp.open("../../circuits/circuit1.txt");
+  _tester_fp._sort_modules_wrt_area();
+
+  for(int i = 0; i < _tester_fp._sorted_modules_area.size(); ++i)
+    tester_sorted_modules_area.push_back(_tester_fp._sorted_modules_area[i].first);
+}
+
 
 bool fp::FloorplanTester::is_valid_expression(
   const std::vector<int>& expression) const {
-  return _fp_obj._is_valid_expression(expression);
+  return _tester_fp._is_valid_expression(expression);
 }
 
 bool fp::FloorplanTester::operand_swap(std::vector<int>& prop) {
-  _fp_obj._operand_swap(prop);
-  return _fp_obj._is_valid_expression(prop);
+  _tester_fp._operand_swap(prop);
+  return _tester_fp._is_valid_expression(prop);
 
 }
 
 bool fp::FloorplanTester::complement_cutline(std::vector<int>& prop) {
-  _fp_obj._complement_cutline(prop);
-  return _fp_obj._is_valid_expression(prop);
+  _tester_fp._complement_cutline(prop);
+  return _tester_fp._is_valid_expression(prop);
 }
 
 
 bool fp::FloorplanTester::complement_last2cutline(std::vector<int>& prop) {
-  return _fp_obj._complement_last2cutline(prop);
+  return _tester_fp._complement_last2cutline(prop);
 }
 
 
 bool fp::FloorplanTester::complement_first2cutline(std::vector<int>& prop) {
-  return _fp_obj._complement_first2cutline(prop);
+  return _tester_fp._complement_first2cutline(prop);
 }
 
 
 void fp::FloorplanTester::rotate_module(const std::vector<int>& curr) {
-  _fp_obj.open("../../circuits/circuit1.txt");
-  _fp_obj._rotate_module(curr);
+  _tester_fp.open("../../circuits/circuit1.txt");
+  _tester_fp._rotate_module(curr);
 }
 
 
 void fp::FloorplanTester::operator_operand_swap(
   const std::vector<int>& curr, std::vector<int>& prop) {
-  _fp_obj._operator_operand_swap(curr, prop);
+  _tester_fp._operator_operand_swap(curr, prop);
 }
 
 int fp::FloorplanTester::pack(const std::vector<int>& expression) {
-  _fp_obj.open("../../circuits/circuit1.txt");
-  return _fp_obj._pack(expression);
+  _tester_fp.open("../../circuits/circuit1.txt");
+  return _tester_fp._pack(expression);
 }
