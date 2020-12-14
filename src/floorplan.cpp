@@ -409,8 +409,8 @@ bool fp::Floorplan::_complement_last2cutline(std::vector<int>& prop) const {
   return false;
 }
   
-/*  
-// TODO
+  
+
 // M4 : swap two adjacent operand and operator
 void fp::Floorplan::_operator_operand_swap(const std::vector<int>& curr,
                                            std::vector<int>& prop) const {
@@ -475,9 +475,9 @@ bool fp::Floorplan::_complement_first2cutline(std::vector<int>& prop) const {
         prop[i] = -1;
 
       if(prop[i+1] == -1)
-        prop[i] = -2;
+        prop[i+1] = -2;
       else
-        prop[i] = -1;
+        prop[i+1] = -1;
 
       return true; 
     }
@@ -505,7 +505,7 @@ void fp::Floorplan::_rotate_module(const std::vector<int>& curr) {
   }
 }
 
-
+/*
 // generate different expressions from neighbor
 void fp::Floorplan::_generate_neighbor(const std::vector<int>& curr,
                                        std::vector<int>& prop) {
@@ -599,4 +599,21 @@ bool fp::FloorplanTester::complement_cutline(std::vector<int>& prop) {
 
 bool fp::FloorplanTester::complement_last2cutline(std::vector<int>& prop) {
   return _fp_obj._complement_last2cutline(prop);
+}
+
+
+bool fp::FloorplanTester::complement_first2cutline(std::vector<int>& prop) {
+  return _fp_obj._complement_first2cutline(prop);
+}
+
+
+void fp::FloorplanTester::rotate_module(const std::vector<int>& curr) {
+  _fp_obj.open("../../circuits/circuit1.txt");
+  _fp_obj._rotate_module(curr);
+}
+
+
+void fp::FloorplanTester::operator_operand_swap(
+  const std::vector<int>& curr, std::vector<int>& prop) {
+  _fp_obj._operator_operand_swap(curr, prop);
 }

@@ -105,7 +105,14 @@ private:
   void _complement_cutline(std::vector<int>& prop) const;
   
   bool _complement_last2cutline(std::vector<int>& prop) const;
-/*
+
+  bool _complement_first2cutline(std::vector<int>& prop) const;
+  
+  void _rotate_module(const std::vector<int>& curr);
+
+  void _operator_operand_swap(const std::vector<int>& curr,
+                              std::vector<int>& prop) const;
+/*  
   void _simulated_annealing(const int& max_iterations_per_temperature,
                             const double& initial_temperature,
                             const double& frozen_temperature);
@@ -113,12 +120,8 @@ private:
 
 
 
-  void _operator_operand_swap(const std::vector<int>& curr,
-                              std::vector<int>& prop) const;
 
-  bool _complement_first2cutline(std::vector<int>& prop) const;
 
-  void _rotate_module(const std::vector<int>& curr);
 
   void _generate_neighbor(const std::vector<int>& curr,
                           std::vector<int>& prop);
@@ -137,6 +140,13 @@ public:
   bool complement_cutline(std::vector<int>& prop);
 
   bool complement_last2cutline(std::vector<int>& prop);
+
+  bool complement_first2cutline(std::vector<int>& prop);
+
+  void rotate_module(const std::vector<int>& curr);
+
+  void operator_operand_swap(const std::vector<int>& curr,
+                             std::vector<int>& prop);
 
 private:
   Floorplan _fp_obj;

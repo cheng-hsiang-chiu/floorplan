@@ -42,7 +42,6 @@ int main(int argc, char* argv[]) {
 
   //fp.dump(std::cout);
 
-
   //fp.sort_modules_size();
   //fp.run();
   //std::cout << fp.calculate_initial_temperature() << '\n';

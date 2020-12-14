@@ -60,6 +60,39 @@ TEST_CASE("testing operation M3" * doctest::timeout(300)) {
 
 
 
+TEST_CASE("testing operation M4" * doctest::timeout(300)) {
+  fp::FloorplanTester tester;
+  
+  std::vector<int> prop{1,2,3,4,5,-1,-1,-1,-1};
+  std::vector<int> curr{1,2,3,4,5,-1,-1,-1,-1};
+
+  tester.operator_operand_swap(curr, prop);
+  REQUIRE(tester.is_valid_expression(prop) == true);
+  REQUIRE(curr == std::vector<int>{1,2,3,4,5,-1,-1,-1,-1});
+}
+
+
+TEST_CASE("testing operation M5" * doctest::timeout(300)) {
+  fp::FloorplanTester tester;
+  
+  std::vector<int> prop{1,2,3,4,5,-1,-1,-1,-1};
+
+  REQUIRE(tester.complement_first2cutline(prop) == true);
+  REQUIRE(tester.is_valid_expression(prop) == true);
+  REQUIRE(prop == std::vector<int>{1,2,3,4,5,-2,-2,-1,-1});
+}
+
+
+TEST_CASE("testing operation M6" * doctest::timeout(300)) {
+  fp::FloorplanTester tester;
+  
+  std::vector<int> curr{1,2,3,4,5,-1,-1,-1,-1};
+    
+  tester.rotate_module(curr);
+  REQUIRE(curr == std::vector<int>{1,2,3,4,5,-1,-1,-1,-1});
+}
+
+
 // TODO: complete the following unittests
 // 1. is_valid_expression?
 // 2. pack
