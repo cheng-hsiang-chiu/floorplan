@@ -99,6 +99,27 @@ TEST_CASE("testing pack" * doctest::timeout(300)) {
   
   std::vector<int> expression{0,1,2,3,-1,-1,-1};
   REQUIRE(tester.pack(expression) == 498760);
+
+  expression = {0,1,2,3,-2,-2,-2};
+  REQUIRE(tester.pack(expression) == 533628);
+  
+  expression = {0,1,2,3,-1,-1,-2};
+  REQUIRE(tester.pack(expression) == 831760);
+  
+  expression = {0,1,2,3,-1,-2,-2};
+  REQUIRE(tester.pack(expression) == 836160);
+  
+  expression = {0,1,2,3,-1,-2,-1};
+  REQUIRE(tester.pack(expression) == 654368);
+  
+  expression = {0,1,2,3,-2,-1,-1};
+  REQUIRE(tester.pack(expression) == 567056);
+  
+  expression = {0,1,2,3,-2,-1,-2};
+  REQUIRE(tester.pack(expression) == 691488);
+  
+  expression = {0,1,2,3,-2,-2,-1};
+  REQUIRE(tester.pack(expression) == 560404);
 }
 
 
