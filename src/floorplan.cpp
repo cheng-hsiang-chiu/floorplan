@@ -1,18 +1,21 @@
 #include <iostream>
-#include <string>
 #include <fstream>
-#include <vector>
-#include <stack>
 #include <algorithm>
 #include <random>
 #include <ctime>
-#include <cstdlib>
-#include <map>
-#include <cmath>
-#include <utility>
 
 
 #include "floorplan.hpp"
+
+
+std::ostream& operator<< (std::ostream &out, const std::vector<int>& vec) {
+  for(int i = 0; i < vec.size(); ++i) {
+    out << vec[i] << ' ';
+  }
+  out << '\n';
+ 
+  return out; 
+}
 
 
 // Flooplan constructor
@@ -34,10 +37,14 @@ void fp::Floorplan::print_modules(std::ostream& os) {
 
 // read modules from input file
 void fp::Floorplan::open(const std::string& input_file) {
+  _input_file = input_file;
+
   std::ifstream infile(input_file, std::ios::in);
   
-  if(!infile)
+  if(!infile) {
     std::cerr << "File could not be opened\n";
+    std::exit(EXIT_FAILURE);
+  }
   
   int num_modules, width, height, index;
   infile >> num_modules;
@@ -55,6 +62,70 @@ void fp::Floorplan::open(const std::string& input_file) {
   for(int i = 0; i < _modules.size(); ++i)
     _mapping.push_back(i);
 }
+
+
+// dump floor plan to cout
+void fp::Floorplan::dump(std::ostream& os) const {
+  os << "0 0 " << _urx << " " << _ury << '\n';
+  
+  for(int i = 0; i < _modules.size(); ++i) {
+    os << _modules[i].idx << " "
+       << _modules[i].llx << " "
+       << _modules[i].lly << " "
+       << _modules[i].w   << " "
+       << _modules[i].h   << '\n';
+  }
+}
+
+
+// dump floor plan to a text file and a json file
+void fp::Floorplan::dump(const std::string& output_file) const {
+
+  std::ofstream outfile(output_file, std::ios::out);
+ 
+  if(!outfile) {
+    std::cerr << "File could not be opened for writing\n";
+    std::exit(EXIT_FAILURE); 
+  }
+ 
+  outfile << "0 0 " << _urx << " " << _ury << '\n';
+  for(int i = 0; i < _modules.size(); ++i) {
+    outfile << _modules[i].idx << " "
+            << _modules[i].llx << " "
+            << _modules[i].lly << " "
+            << _modules[i].w   << " "
+            << _modules[i].h   << '\n';
+  }
+ 
+  // generate json output 
+  std::string output_file_json = output_file;
+  output_file_json.replace(output_file_json.end()-3,
+                           output_file_json.end(), "json");
+ 
+  std::ofstream outfile_json(output_file_json, std::ios::out);
+  outfile_json << "{\"circuit\":\"" << _input_file << "\""
+               << ",\"block_number\":" << _modules.size()
+               << ",\"llx\":0"
+               << ",\"lly\":0"
+               << ",\"urx\":" << _urx
+               << ",\"ury\":" << _ury
+               << ",\"area\":" << _area
+               << ",\"coordinates\":"
+               << "[";
+  for(int i = 0; i < _modules.size(); ++i) {
+    outfile_json << "{\"idx\":" << _modules[i].idx
+                 << ",\"llx\":" << _modules[i].llx
+                 << ",\"lly\":" << _modules[i].lly
+                 << ",\"width\":" << _modules[i].w
+                 << ",\"height\":" << _modules[i].h;
+    if(i == _modules.size()-1)
+      outfile_json << "}";
+    else
+      outfile_json << "},";
+  }
+  outfile_json << "]}";
+}
+
 
 
 // sort modules with respect to its area
@@ -102,15 +173,13 @@ void fp::Floorplan::optimize(const int& max_iterations_per_temperature,
   _sort_modules_wrt_area();
   _generate_initial_expression();
   
-  //std::cout << initial_temperature << '\n';      
-  //initial_temperature = _calculate_initial_temperature(); 
+  initial_temperature = _calculate_initial_temperature(); 
 
-  std::cout << initial_temperature << '\n';      
-  //_simulated_annealing(max_iterations_per_temperature,
-  //                     initial_temperature, 
-  //                     frozen_temperature);
+  _simulated_annealing(max_iterations_per_temperature,
+                       initial_temperature, 
+                       frozen_temperature);
    
-  //_modules = _modules_best;
+  _modules = _modules_best;
 
   int area = _pack(_expression);
   std::cout << "area = " << area << '\n';
@@ -150,7 +219,7 @@ bool fp::Floorplan::_is_valid_expression(const std::vector<int>& expression) con
   return true;
 }
 
-/*
+
 // calculate an initial temperature 
 double fp::Floorplan::_calculate_initial_temperature() {
   int num_moves = 0;
@@ -168,11 +237,11 @@ double fp::Floorplan::_calculate_initial_temperature() {
 
     area_prop = _pack(expression_prop);
     delta_area = area_prop - area_curr;
-    area_curr = area_prop;
 
     total_area_change += abs(delta_area);
     ++num_moves;
     expression_curr = expression_prop;
+    area_curr = area_prop;
   }
 
   avg_area_change = total_area_change / num_moves;
@@ -180,10 +249,10 @@ double fp::Floorplan::_calculate_initial_temperature() {
 
   return init_temperature;
 }
-*/
-/*
+
+
 // perform simulated annealing
-void pf::Floorplan::_simulated_annealing(
+void fp::Floorplan::_simulated_annealing(
   const int& max_iterations_per_temperature,
   const double& initial_temperature,
   const double& frozen_temperature) {
@@ -193,8 +262,6 @@ void pf::Floorplan::_simulated_annealing(
   std::vector<int> expression_prop;
   std::vector<int> expression_curr;
   std::vector<int> expression_best;   
-    
-  //curr = generate_initial_solution(); // 12V3H4V5H6V...
     
   expression_curr = _expression;
   expression_best = expression_curr;
@@ -244,7 +311,6 @@ void pf::Floorplan::_simulated_annealing(
         if(prob > dis(gen)) {
           expression_curr = expression_prop;
           area_curr = area_prop; 
-          ++accept;
         }
       }
     }
@@ -253,9 +319,6 @@ void pf::Floorplan::_simulated_annealing(
 
   _expression = expression_best;
 }
-  
-*/  
-  
   
   
 // pack modules
@@ -506,7 +569,7 @@ void fp::Floorplan::_rotate_module(const std::vector<int>& curr) {
   }
 }
 
-/*
+
 // generate different expressions from neighbor
 void fp::Floorplan::_generate_neighbor(const std::vector<int>& curr,
                                        std::vector<int>& prop) {
@@ -520,20 +583,20 @@ void fp::Floorplan::_generate_neighbor(const std::vector<int>& curr,
         std::cout << curr;
         _operand_swap(prop);
         std::cout << prop;
-        ++count[0];
+        //++count[0];
         break;
       case 1:
         std::cout << "rand 1 : \n";
         std::cout << curr;
         _complement_cutline(prop);
         std::cout << prop;
-        ++count[1];
+        //++count[1];
         break;
       case 2:
         std::cout << "rand 2 : \n";
         std::cout << curr;
         is_exist = _complement_last2cutline(prop);
-        ++count[2];
+        //++count[2];
         if(is_exist == false)
           continue;
         std::cout << prop;
@@ -543,13 +606,13 @@ void fp::Floorplan::_generate_neighbor(const std::vector<int>& curr,
         std::cout << curr;
         _operator_operand_swap(curr, prop);
         std::cout << prop;
-        ++count[3];
+        //++count[3];
         break;
       case 4:
         std::cout << "rand 4 : \n";
         std::cout << curr;
         is_exist = _complement_first2cutline(prop);
-        ++count[4];
+        //++count[4];
         if(is_exist == false)
           continue;
         std::cout << prop;
@@ -559,7 +622,7 @@ void fp::Floorplan::_generate_neighbor(const std::vector<int>& curr,
         std::cout << curr;
         _rotate_module(curr);
         std::cout << prop;
-        ++count[5];
+        //++count[5];
         break;
     }
     break;
@@ -567,15 +630,8 @@ void fp::Floorplan::_generate_neighbor(const std::vector<int>& curr,
 }
 
 
-std::ostream& operator<< (std::ostream &out, const std::vector<int>& vec) {
-  for(int i = 0; i < vec.size(); ++i) {
-    out << vec[i] << ' ';
-  }
-  out << '\n';
- 
-  return out; 
-}
-*/
+
+// the following definitions are used for testing purposes
 
 fp::FloorplanTester::FloorplanTester() {
   fp::Floorplan _fp_obj;

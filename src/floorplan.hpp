@@ -40,6 +40,9 @@
 #define t0 -1
 
 
+std::ostream& operator<< (std::ostream &out, const std::vector<int>& vec);
+
+
 namespace fp {
 
 typedef struct MODULE {
@@ -69,6 +72,10 @@ public:
 
   void open(const std::string& input_file);
 
+  void dump(std::ostream& os) const;
+
+  void dump(const std::string& output_file) const;
+
 private:
   std::vector<int> _expression;
   
@@ -78,11 +85,11 @@ private:
   
   std::vector<std::pair<int, int>> _sorted_modules_area;
   
-  std::string _output_file;
-  
   std::stack<cluster_t> _stack;
   
   std::vector<int> _mapping;
+
+  std::string _input_file;
 
   int _area, _urx, _ury;
   
@@ -112,20 +119,13 @@ private:
 
   void _operator_operand_swap(const std::vector<int>& curr,
                               std::vector<int>& prop) const;
-/*  
+  
+  void _generate_neighbor(const std::vector<int>& curr,
+                          std::vector<int>& prop);
+  
   void _simulated_annealing(const int& max_iterations_per_temperature,
                             const double& initial_temperature,
                             const double& frozen_temperature);
-  
-
-
-
-
-
-
-  void _generate_neighbor(const std::vector<int>& curr,
-                          std::vector<int>& prop);
-*/
 };
 
 class FloorplanTester {
