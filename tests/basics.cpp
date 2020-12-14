@@ -93,6 +93,15 @@ TEST_CASE("testing operation M6" * doctest::timeout(300)) {
 }
 
 
+
+TEST_CASE("testing pack" * doctest::timeout(300)) {
+  fp::FloorplanTester tester;
+  
+  std::vector<int> expression{0,1,2,3,-1,-1,-1};
+  REQUIRE(tester.pack(expression) == 498760);
+}
+
+
 // TODO: complete the following unittests
 // 1. is_valid_expression?
 // 2. pack

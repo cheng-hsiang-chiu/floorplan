@@ -147,6 +147,8 @@ public:
 
   void operator_operand_swap(const std::vector<int>& curr,
                              std::vector<int>& prop);
+  
+  int pack(const std::vector<int>& expression);
 
 private:
   Floorplan _fp_obj;

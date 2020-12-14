@@ -23,7 +23,7 @@ fp::Floorplan::Floorplan() {}
 void fp::Floorplan::print_modules(std::ostream& os) {
   for(int i = 0; i < _modules.size(); ++i) {
     os << "module[" << _modules[i].idx
-       << "] has weight = " << _modules[i].w
+       << "] has width = " << _modules[i].w
        << " and height = "  << _modules[i].h
        << ", located at ("   << _modules[i].llx
        << ", " << _modules[i].lly
@@ -39,13 +39,13 @@ void fp::Floorplan::open(const std::string& input_file) {
   if(!infile)
     std::cerr << "File could not be opened\n";
   
-  int num_modules, weight, height, index;
+  int num_modules, width, height, index;
   infile >> num_modules;
 
-  while(infile >> index >> weight >> height) {
+  while(infile >> index >> width >> height) {
     module_t temp;
     temp.idx = index;
-    temp.w = weight;
+    temp.w = width;
     temp.h = height;
     temp.llx = 0;
     temp.lly = 0;
@@ -94,7 +94,7 @@ void fp::Floorplan::_generate_initial_expression() {
 }
 
 
-  
+// generate an optimized floor plan  
 void fp::Floorplan::optimize(const int& max_iterations_per_temperature, 
                              double& initial_temperature, 
                              const double& frozen_temperature) {
@@ -117,6 +117,7 @@ void fp::Floorplan::optimize(const int& max_iterations_per_temperature,
 }
 
 
+// check if the expression is valid
 bool fp::Floorplan::_is_valid_expression(const std::vector<int>& expression) const {
   std::vector<int> operand_count(expression.size(), 0);
   std::vector<int> operator_count(expression.size(), 0);
@@ -257,7 +258,7 @@ void pf::Floorplan::_simulated_annealing(
   
   
   
-// update modules' positions
+// pack modules
 int fp::Floorplan::_pack(const std::vector<int>& expression) {
   while(!_stack.empty())
     _stack.pop();
@@ -616,4 +617,9 @@ void fp::FloorplanTester::rotate_module(const std::vector<int>& curr) {
 void fp::FloorplanTester::operator_operand_swap(
   const std::vector<int>& curr, std::vector<int>& prop) {
   _fp_obj._operator_operand_swap(curr, prop);
+}
+
+int fp::FloorplanTester::pack(const std::vector<int>& expression) {
+  _fp_obj.open("../../circuits/circuit1.txt");
+  return _fp_obj._pack(expression);
 }
