@@ -1,7 +1,5 @@
-# CMake version
-cmake_minimum_required (VERSION 3.10)
+add_library(libfloorplan floorplan.cpp floorplan.hpp)
 
-# Project name
-project(fplib VERSION 1.0.0 LANGUAGES CXX)
+target_link_libraries(libfloorplan error_settings)
 
-add_library(fplib floorplan.cpp floorplan.hpp)
+

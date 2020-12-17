@@ -2,9 +2,7 @@
 #include <string>
 #include <vector>
 
-#include "floorplan.hpp"
-
-
+#include <floorplan.hpp>
 
 int main(int argc, char* argv[]) {
 

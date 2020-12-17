@@ -1,8 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <algorithm>
-#include <random>
-#include <ctime>
+
 
 
 #include "floorplan.hpp"
@@ -17,13 +13,13 @@ std::ostream& operator<< (std::ostream &out, const std::vector<int>& vec) {
   return out; 
 }
 
+// TODO
+namespace fp {
 
-// Flooplan constructor
-fp::Floorplan::Floorplan() {}
 
 
 // print out the read-in modules
-void fp::Floorplan::print_modules(std::ostream& os) {
+void Floorplan::print_modules(std::ostream& os) {
   for(int i = 0; i < _modules.size(); ++i) {
     os << "module[" << _modules[i].idx
        << "] has width = " << _modules[i].w
@@ -36,7 +32,7 @@ void fp::Floorplan::print_modules(std::ostream& os) {
 
 
 // read modules from input file
-void fp::Floorplan::open(const std::string& input_file) {
+void Floorplan::open(const std::string& input_file) {
   _input_file = input_file;
 
   std::ifstream infile(input_file, std::ios::in);
@@ -65,7 +61,7 @@ void fp::Floorplan::open(const std::string& input_file) {
 
 
 // dump floor plan to console
-void fp::Floorplan::dump(std::ostream& os) const {
+void Floorplan::dump(std::ostream& os) const {
   os << "0 0 " << _urx << " " << _ury << '\n';
   
   for(int i = 0; i < _modules.size(); ++i) {
@@ -79,7 +75,7 @@ void fp::Floorplan::dump(std::ostream& os) const {
 
 
 // dump floor plan to a text file and a json file
-void fp::Floorplan::dump(const std::string& output_file) const {
+void Floorplan::dump(const std::string& output_file) const {
 
   std::ofstream outfile(output_file, std::ios::out);
  
@@ -96,7 +92,7 @@ void fp::Floorplan::dump(const std::string& output_file) const {
             << _modules[i].w   << " "
             << _modules[i].h   << '\n';
   }
- 
+
   // generate json output 
   std::string output_file_json = output_file;
   output_file_json.replace(output_file_json.end()-3,
@@ -129,7 +125,7 @@ void fp::Floorplan::dump(const std::string& output_file) const {
 
 
 // sort modules with respect to its area
-void fp::Floorplan::_sort_modules_wrt_area() {
+void Floorplan::_sort_modules_wrt_area() {
 
   for(int i = 0; i < _modules.size(); ++i)
     _sorted_modules_area.push_back(std::make_pair(
@@ -145,9 +141,9 @@ void fp::Floorplan::_sort_modules_wrt_area() {
   
  
 // generate an initial expression 
-void fp::Floorplan::_generate_initial_expression() {
+void Floorplan::_generate_initial_expression() {
     
-  for(int i = 0; i < _sorted_modules_area.size(); ++i) {
+  for(size_t i = 0; i < _sorted_modules_area.size(); ++i) {
     if(i == 0) {
       _expression.push_back(_sorted_modules_area[i].first);
     }
@@ -166,11 +162,21 @@ void fp::Floorplan::_generate_initial_expression() {
 
 
 // generate an optimized floor plan  
-void fp::Floorplan::optimize(const int& max_iterations_per_temperature, 
+void Floorplan::optimize(const int& max_iterations_per_temperature, 
                              double& initial_temperature, 
                              const double& frozen_temperature) {
-
+  
+  // TODO: measure the time using std::chrono
+  
+  auto tbeg = std::chrono::steady_clock::now();
   _sort_modules_wrt_area();
+  auto tend = std::chrono::steady_clock::now();
+
+  std::cout << "sort modules completed: " 
+            << std::chrono::duration_cast<std::chrono::milliseconds>(tend-tbeg).count()
+            << '\n';
+
+
   _generate_initial_expression();
   
   initial_temperature = _calculate_initial_temperature(); 
@@ -187,7 +193,7 @@ void fp::Floorplan::optimize(const int& max_iterations_per_temperature,
 
 
 // check if the expression is valid
-bool fp::Floorplan::_is_valid_expression(const std::vector<int>& expression) const {
+bool Floorplan::_is_valid_expression(const std::vector<int>& expression) const {
   std::vector<int> operand_count(expression.size(), 0);
   std::vector<int> operator_count(expression.size(), 0);
 
@@ -221,7 +227,7 @@ bool fp::Floorplan::_is_valid_expression(const std::vector<int>& expression) con
 
 
 // calculate an initial temperature 
-double fp::Floorplan::_calculate_initial_temperature() {
+double Floorplan::_calculate_initial_temperature() {
   int num_moves = 0;
   double total_area_change = 0.0;
   double delta_area, avg_area_change, init_temperature;
@@ -250,10 +256,10 @@ double fp::Floorplan::_calculate_initial_temperature() {
   return init_temperature;
 }
 
-
 // perform simulated annealing
-void fp::Floorplan::_simulated_annealing(
-  const int& max_iterations_per_temperature,
+//
+void Floorplan::_simulated_annealing(
+  const int& max_iterations_per_temperature,  // TODO: I suggested using size_t
   const double& initial_temperature,
   const double& frozen_temperature) {
     
@@ -284,7 +290,9 @@ void fp::Floorplan::_simulated_annealing(
     for(int iter = 0; iter < max_iterations_per_temperature; iter++) {
       expression_prop = expression_curr;
       _generate_neighbor(expression_curr, expression_prop);
-        
+      
+      // TODO: can we try using aspect ratio? we want to be as close to 1.0 as
+      // possible ... a = max(H, W) / min(H, W)
       int area_prop = _pack(expression_prop);
       int cost = area_prop - area_curr;
         
@@ -322,7 +330,7 @@ void fp::Floorplan::_simulated_annealing(
   
   
 // pack modules
-int fp::Floorplan::_pack(const std::vector<int>& expression) {
+int Floorplan::_pack(const std::vector<int>& expression) {
   while(!_stack.empty())
     _stack.pop();
 
@@ -362,7 +370,7 @@ int fp::Floorplan::_pack(const std::vector<int>& expression) {
 }
 
 
-void fp::Floorplan::_pack_cutline(const int& cutline) {
+void Floorplan::_pack_cutline(const int& cutline) {
   cluster_t cluster, cluster_r, cluster_l;
     
   cluster_r = _stack.top();
@@ -398,7 +406,7 @@ void fp::Floorplan::_pack_cutline(const int& cutline) {
   
   
 // M1 : swap two adjacent operands
-void fp::Floorplan::_operand_swap(std::vector<int>& prop) {
+void Floorplan::_operand_swap(std::vector<int>& prop) {
 
   int head, tail;
 
@@ -428,7 +436,7 @@ void fp::Floorplan::_operand_swap(std::vector<int>& prop) {
 
 
 // M2 : complement a cutline
-void fp::Floorplan::_complement_cutline(std::vector<int>& prop) const {
+void Floorplan::_complement_cutline(std::vector<int>& prop) const {
 
   int head;
 
@@ -451,7 +459,7 @@ void fp::Floorplan::_complement_cutline(std::vector<int>& prop) const {
  
 
 // M3 : complement last pair of two cutlines
-bool fp::Floorplan::_complement_last2cutline(std::vector<int>& prop) const {
+bool Floorplan::_complement_last2cutline(std::vector<int>& prop) const {
   
   for(int i = prop.size()-1; i > 0; --i) {
     if((prop[i] < 0) && (prop[i-1] < 0)) {
@@ -476,7 +484,7 @@ bool fp::Floorplan::_complement_last2cutline(std::vector<int>& prop) const {
   
 
 // M4 : swap two adjacent operand and operator
-void fp::Floorplan::_operator_operand_swap(const std::vector<int>& curr,
+void Floorplan::_operator_operand_swap(const std::vector<int>& curr,
                                            std::vector<int>& prop) const {
     
   int head, tail;
@@ -529,8 +537,12 @@ void fp::Floorplan::_operator_operand_swap(const std::vector<int>& curr,
  
 
 // M5 : complement first pair of two cutlines, consecutive cutlines must be different
-bool fp::Floorplan::_complement_first2cutline(std::vector<int>& prop) const {
-  
+bool Floorplan::_complement_first2cutline(std::vector<int>& prop) const {
+
+  // private method uses assert!!!
+  assert(prop.size() > 0);
+
+  // TODO: what happened when prop.size == 0?
   for(int i = 0; i < prop.size()-1; ++i) {
     if((prop[i] < 0) && (prop[i+1] < 0)) {
       if(prop[i] == -1)
@@ -553,7 +565,7 @@ bool fp::Floorplan::_complement_first2cutline(std::vector<int>& prop) const {
   
   
 // M6 : randomly roate one module
-void fp::Floorplan::_rotate_module(const std::vector<int>& curr) {
+void Floorplan::_rotate_module(const std::vector<int>& curr) {
   int head;
 
   while(1) {
@@ -571,7 +583,7 @@ void fp::Floorplan::_rotate_module(const std::vector<int>& curr) {
 
 
 // generate different expressions from neighbor
-void fp::Floorplan::_generate_neighbor(const std::vector<int>& curr,
+void Floorplan::_generate_neighbor(const std::vector<int>& curr,
                                        std::vector<int>& prop) {
 
   bool is_exist = true;
@@ -633,11 +645,11 @@ void fp::Floorplan::_generate_neighbor(const std::vector<int>& curr,
 
 // the following definitions are used for testing purposes
 
-fp::FloorplanTester::FloorplanTester() {
-  fp::Floorplan _tester_fp;
+FloorplanTester::FloorplanTester() {
+  Floorplan _tester_fp;
 }
 
-void fp::FloorplanTester::sort_modules_wrt_area() {
+void FloorplanTester::sort_modules_wrt_area() {
   _tester_fp.open("../../circuits/circuit1.txt");
   _tester_fp._sort_modules_wrt_area();
 
@@ -646,45 +658,48 @@ void fp::FloorplanTester::sort_modules_wrt_area() {
 }
 
 
-bool fp::FloorplanTester::is_valid_expression(
+bool FloorplanTester::is_valid_expression(
   const std::vector<int>& expression) const {
   return _tester_fp._is_valid_expression(expression);
 }
 
-bool fp::FloorplanTester::operand_swap(std::vector<int>& prop) {
+bool FloorplanTester::operand_swap(std::vector<int>& prop) {
   _tester_fp._operand_swap(prop);
   return _tester_fp._is_valid_expression(prop);
 
 }
 
-bool fp::FloorplanTester::complement_cutline(std::vector<int>& prop) {
+bool FloorplanTester::complement_cutline(std::vector<int>& prop) {
   _tester_fp._complement_cutline(prop);
   return _tester_fp._is_valid_expression(prop);
 }
 
 
-bool fp::FloorplanTester::complement_last2cutline(std::vector<int>& prop) {
+bool FloorplanTester::complement_last2cutline(std::vector<int>& prop) {
   return _tester_fp._complement_last2cutline(prop);
 }
 
 
-bool fp::FloorplanTester::complement_first2cutline(std::vector<int>& prop) {
+bool FloorplanTester::complement_first2cutline(std::vector<int>& prop) {
   return _tester_fp._complement_first2cutline(prop);
 }
 
 
-void fp::FloorplanTester::rotate_module(const std::vector<int>& curr) {
+void FloorplanTester::rotate_module(const std::vector<int>& curr) {
   _tester_fp.open("../../circuits/circuit1.txt");
   _tester_fp._rotate_module(curr);
 }
 
 
-void fp::FloorplanTester::operator_operand_swap(
+void FloorplanTester::operator_operand_swap(
   const std::vector<int>& curr, std::vector<int>& prop) {
   _tester_fp._operator_operand_swap(curr, prop);
 }
 
-int fp::FloorplanTester::pack(const std::vector<int>& expression) {
+int FloorplanTester::pack(const std::vector<int>& expression) {
   _tester_fp.open("../../circuits/circuit1.txt");
   return _tester_fp._pack(expression);
+}
+
+
 }

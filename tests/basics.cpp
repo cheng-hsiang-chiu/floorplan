@@ -4,6 +4,7 @@
 #include "../src/floorplan.hpp"
 
 TEST_CASE("testing is_valid_expression" * doctest::timeout(300)) {
+
   fp::FloorplanTester tester;
   
   std::vector<int> expression{1,2,1};
@@ -45,8 +46,6 @@ TEST_CASE("testing operation M2" * doctest::timeout(300)) {
 
   REQUIRE(tester.complement_cutline(prop) == true);
 }
-
-
 
 TEST_CASE("testing operation M3" * doctest::timeout(300)) {
   fp::FloorplanTester tester;
@@ -91,7 +90,6 @@ TEST_CASE("testing operation M6" * doctest::timeout(300)) {
   tester.rotate_module(curr);
   REQUIRE(curr == std::vector<int>{1,2,3,4,5,-1,-1,-1,-1});
 }
-
 
 
 TEST_CASE("testing pack" * doctest::timeout(300)) {
