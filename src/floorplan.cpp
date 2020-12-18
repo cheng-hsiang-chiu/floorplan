@@ -1,11 +1,9 @@
-
-
-
+#include <algorithm>
 #include "floorplan.hpp"
 
 
 std::ostream& operator<< (std::ostream &out, const std::vector<int>& vec) {
-  for(int i = 0; i < vec.size(); ++i) {
+  for(size_t i = 0; i < vec.size(); ++i) {
     out << vec[i] << ' ';
   }
   out << '\n';
@@ -18,9 +16,9 @@ namespace fp {
 
 
 
-// print out the read-in modules
-void Floorplan::print_modules(std::ostream& os) {
-  for(int i = 0; i < _modules.size(); ++i) {
+// dump the read-in modules
+void Floorplan::dump_modules(std::ostream& os) const {
+  for(size_t i = 0; i < _modules.size(); ++i) {
     os << "module[" << _modules[i].idx
        << "] has width = " << _modules[i].w
        << " and height = "  << _modules[i].h
@@ -42,7 +40,7 @@ void Floorplan::open(const std::string& input_file) {
     std::exit(EXIT_FAILURE);
   }
   
-  int num_modules, width, height, index;
+  size_t num_modules, width, height, index;
   infile >> num_modules;
 
   while(infile >> index >> width >> height) {
@@ -54,8 +52,13 @@ void Floorplan::open(const std::string& input_file) {
     temp.lly = 0;
     _modules.push_back(temp);
   }
+
+  if(!(_modules.size() > 0)) {
+    std::cerr << "No modules is read in\n";
+    std::exit(EXIT_FAILURE);
+  }
     
-  for(int i = 0; i < _modules.size(); ++i)
+  for(size_t i = 0; i < _modules.size(); ++i)
     _mapping.push_back(i);
 }
 
@@ -64,7 +67,7 @@ void Floorplan::open(const std::string& input_file) {
 void Floorplan::dump(std::ostream& os) const {
   os << "0 0 " << _urx << " " << _ury << '\n';
   
-  for(int i = 0; i < _modules.size(); ++i) {
+  for(size_t i = 0; i < _modules.size(); ++i) {
     os << _modules[i].idx << " "
        << _modules[i].llx << " "
        << _modules[i].lly << " "
@@ -74,9 +77,12 @@ void Floorplan::dump(std::ostream& os) const {
 }
 
 
-// dump floor plan to a text file and a json file
-void Floorplan::dump(const std::string& output_file) const {
+// dump floor plan to a json file
+void Floorplan::dump_json(std::string& output_file) const {
 
+  if(output_file.rfind(".json") == std::string::npos)
+    output_file.append(".json");
+  
   std::ofstream outfile(output_file, std::ios::out);
  
   if(!outfile) {
@@ -84,42 +90,28 @@ void Floorplan::dump(const std::string& output_file) const {
     std::exit(EXIT_FAILURE); 
   }
  
-  outfile << "0 0 " << _urx << " " << _ury << '\n';
-  for(int i = 0; i < _modules.size(); ++i) {
-    outfile << _modules[i].idx << " "
-            << _modules[i].llx << " "
-            << _modules[i].lly << " "
-            << _modules[i].w   << " "
-            << _modules[i].h   << '\n';
-  }
-
   // generate json output 
-  std::string output_file_json = output_file;
-  output_file_json.replace(output_file_json.end()-3,
-                           output_file_json.end(), "json");
- 
-  std::ofstream outfile_json(output_file_json, std::ios::out);
-  outfile_json << "{\"circuit\":\"" << _input_file << "\""
-               << ",\"block_number\":" << _modules.size()
-               << ",\"llx\":0"
-               << ",\"lly\":0"
-               << ",\"urx\":" << _urx
-               << ",\"ury\":" << _ury
-               << ",\"area\":" << _area
-               << ",\"coordinates\":"
-               << "[";
-  for(int i = 0; i < _modules.size(); ++i) {
-    outfile_json << "{\"idx\":" << _modules[i].idx
-                 << ",\"llx\":" << _modules[i].llx
-                 << ",\"lly\":" << _modules[i].lly
-                 << ",\"width\":" << _modules[i].w
-                 << ",\"height\":" << _modules[i].h;
+  outfile << "{\"circuit\":\""    << _input_file << "\""
+          << ",\"block_number\":" << _modules.size()
+          << ",\"llx\":0"
+          << ",\"lly\":0"
+          << ",\"urx\":"  << _urx
+          << ",\"ury\":"  << _ury
+          << ",\"area\":" << _area
+          << ",\"coordinates\":"
+          << "[";
+  for(size_t i = 0; i < _modules.size(); ++i) {
+    outfile << "{\"idx\":"    << _modules[i].idx
+            << ",\"llx\":"    << _modules[i].llx
+            << ",\"lly\":"    << _modules[i].lly
+            << ",\"width\":"  << _modules[i].w
+            << ",\"height\":" << _modules[i].h;
     if(i == _modules.size()-1)
-      outfile_json << "}";
+      outfile << "}";
     else
-      outfile_json << "},";
+      outfile << "},";
   }
-  outfile_json << "]}";
+  outfile << "]}";
 }
 
 
@@ -127,7 +119,7 @@ void Floorplan::dump(const std::string& output_file) const {
 // sort modules with respect to its area
 void Floorplan::_sort_modules_wrt_area() {
 
-  for(int i = 0; i < _modules.size(); ++i)
+  for(size_t i = 0; i < _modules.size(); ++i)
     _sorted_modules_area.push_back(std::make_pair(
     i, _modules[i].w * _modules[i].h));
 
@@ -162,32 +154,52 @@ void Floorplan::_generate_initial_expression() {
 
 
 // generate an optimized floor plan  
-void Floorplan::optimize(const int& max_iterations_per_temperature, 
-                             double& initial_temperature, 
-                             const double& frozen_temperature) {
+void Floorplan::optimize() { 
   
   // TODO: measure the time using std::chrono
-  
   auto tbeg = std::chrono::steady_clock::now();
   _sort_modules_wrt_area();
   auto tend = std::chrono::steady_clock::now();
 
   std::cout << "sort modules completed: " 
             << std::chrono::duration_cast<std::chrono::milliseconds>(tend-tbeg).count()
-            << '\n';
+            << " ms\n";
 
-
+ 
+  tbeg = std::chrono::steady_clock::now();
   _generate_initial_expression();
+  tend = std::chrono::steady_clock::now();
   
-  initial_temperature = _calculate_initial_temperature(); 
+  std::cout << "generate initial expression completed: " 
+            << std::chrono::duration_cast<std::chrono::milliseconds>(tend-tbeg).count()
+            << " ms\n";
 
-  _simulated_annealing(max_iterations_per_temperature,
-                       initial_temperature, 
-                       frozen_temperature);
-   
+  
+  tbeg = std::chrono::steady_clock::now();
+  size_t initial_temperature = _calculate_initial_temperature(); 
+  tend = std::chrono::steady_clock::now();
+  
+  std::cout << "calculate initial temperature completed: " 
+            << std::chrono::duration_cast<std::chrono::milliseconds>(tend-tbeg).count()
+            << " ms\n";
+  
+ 
+  tbeg = std::chrono::steady_clock::now();
+  #ifdef FP_SA_RATIO
+  std::cout << "SA_RATIO ON\n";
+  #else
+  std::cout << "SA_RATIO OFF\n";
+  #endif
+  _simulated_annealing(initial_temperature);
+  tend = std::chrono::steady_clock::now();
+  
+  std::cout << "simulated annealing completed: " 
+            << std::chrono::duration_cast<std::chrono::milliseconds>(tend-tbeg).count()
+            << " ms\n";
+  
   _modules = _modules_best;
 
-  int area = _pack(_expression);
+  size_t area = _pack(_expression);
   std::cout << "area = " << area << '\n';
 }
 
@@ -208,7 +220,7 @@ bool Floorplan::_is_valid_expression(const std::vector<int>& expression) const {
   if(expression.back() >= 0)
     return false;
 
-  for(int i = 1; i < expression.size(); ++i) {
+  for(size_t i = 1; i < expression.size(); ++i) {
     if(expression[i] >= 0) {
       operand_count[i] = operand_count[i-1] + 1;
       operator_count[i] = operator_count[i-1];
@@ -228,15 +240,15 @@ bool Floorplan::_is_valid_expression(const std::vector<int>& expression) const {
 
 // calculate an initial temperature 
 double Floorplan::_calculate_initial_temperature() {
-  int num_moves = 0;
+  size_t num_moves = 0;
   double total_area_change = 0.0;
   double delta_area, avg_area_change, init_temperature;
 
   std::vector<int> expression_curr = _expression;
   std::vector<int> expression_prop = _expression;
 
-  int area_curr = _pack(expression_curr);
-  int area_prop;
+  size_t area_curr = _pack(expression_curr);
+  size_t area_prop;
 
   while(num_moves < random_moves) {
     _generate_neighbor(expression_curr, expression_prop);
@@ -256,12 +268,10 @@ double Floorplan::_calculate_initial_temperature() {
   return init_temperature;
 }
 
+
+/*
 // perform simulated annealing
-//
-void Floorplan::_simulated_annealing(
-  const int& max_iterations_per_temperature,  // TODO: I suggested using size_t
-  const double& initial_temperature,
-  const double& frozen_temperature) {
+void Floorplan::_simulated_annealing(const double initial_temperature) {
     
   double temperature = initial_temperature;
 
@@ -272,8 +282,8 @@ void Floorplan::_simulated_annealing(
   expression_curr = _expression;
   expression_best = expression_curr;
     
-  int area_best = _pack(expression_best);
-  int area_curr = area_best;
+  size_t area_best = _pack(expression_best);
+  size_t area_curr = area_best;
           
   std::random_device rd;
   std::mt19937 gen(rd());  // expensive - typically construct once
@@ -286,14 +296,14 @@ void Floorplan::_simulated_annealing(
   //std::cout << "area_best : " << area_best << '\n';
   //std::cout << "--------------------\n";
 
-  while(temperature > frozen_temperature) {
-    for(int iter = 0; iter < max_iterations_per_temperature; iter++) {
+  while(temperature > FP_FROZEN_TEMPERATURE) {
+    for(size_t iter = 0; iter < FP_MAX_ITERATIONS_PER_TEMPERATURE; iter++) {
       expression_prop = expression_curr;
       _generate_neighbor(expression_curr, expression_prop);
       
       // TODO: can we try using aspect ratio? we want to be as close to 1.0 as
       // possible ... a = max(H, W) / min(H, W)
-      int area_prop = _pack(expression_prop);
+      size_t area_prop = _pack(expression_prop);
       int cost = area_prop - area_curr;
         
       //std::cout << "postfix_prop : " << postfix_prop << '\n'; 
@@ -327,6 +337,88 @@ void Floorplan::_simulated_annealing(
 
   _expression = expression_best;
 }
+*/
+
+
+// perform simulated annealing
+void Floorplan::_simulated_annealing(const double initial_temperature) {
+    
+  double temperature = initial_temperature;
+
+  std::vector<int> expression_prop;
+  std::vector<int> expression_curr;
+  std::vector<int> expression_best;   
+    
+  expression_curr = _expression;
+  expression_best = expression_curr;
+    
+  size_t area_best = _pack(expression_best);
+  size_t area_curr = area_best;
+
+  double ratio_best = std::max(_urx, _ury) / std::min(_urx, _ury);
+  double ratio_curr = ratio_best;
+          
+  std::random_device rd;
+  std::mt19937 gen(rd());  // expensive - typically construct once
+  std::uniform_real_distribution<> dis(0, 1);
+  
+  std::srand(std::time(nullptr)); 
+  //std::cout << "postfix_curr : " << postfix_curr << '\n'; 
+  //std::cout << "postfix_best : " << postfix_best << '\n'; 
+  //std::cout << "area_curr : " << area_curr << '\n';
+  //std::cout << "area_best : " << area_best << '\n';
+  //std::cout << "--------------------\n";
+
+  while(temperature > FP_FROZEN_TEMPERATURE) {
+    for(size_t iter = 0; iter < FP_MAX_ITERATIONS_PER_TEMPERATURE; iter++) {
+      expression_prop = expression_curr;
+      _generate_neighbor(expression_curr, expression_prop);
+      
+      // TODO: can we try using aspect ratio? we want to be as close to 1.0 as
+      // possible ... a = max(H, W) / min(H, W)
+      size_t area_prop = _pack(expression_prop);
+      double ratio_prop = std::max(_urx, _ury) / std::min(_urx, _ury);
+      #ifdef FP_SA_RATIO
+      double cost = ratio_prop*area_prop - ratio_curr*area_prop;
+      #else
+      double cost = area_prop - area_curr;
+      #endif
+
+
+      //std::cout << "postfix_prop : " << postfix_prop << '\n'; 
+      //std::cout << "postfix_curr : " << postfix_curr << '\n'; 
+      //std::cout << "postfix_best : " << postfix_best << '\n'; 
+      //std::cout << "area_best : " << area_best << '\n';
+      //std::cout << "area_curr : " << area_curr << '\n';
+      //std::cout << "area_prop : " << area_prop << '\n';
+      //std::cout << "@@@@@@@@@@@@@@@@@@@@@\n";
+
+      if(cost < 0) {
+        expression_curr = expression_prop;
+        area_curr = area_prop;
+        ratio_curr = ratio_prop;
+        if(area_prop < area_best) {
+          expression_best = expression_prop;
+          area_best = area_prop;
+          ratio_best = ratio_prop;
+          _modules_best = _modules;
+        }
+      }
+
+      else {
+        auto prob = std::exp(-cost / temperature); 
+        if(prob > dis(gen)) {
+          expression_curr = expression_prop;
+          area_curr = area_prop; 
+          ratio_curr = ratio_prop;
+        }
+      }
+    }
+    temperature *= 0.95;  
+  }
+
+  _expression = expression_best;
+}
   
   
 // pack modules
@@ -334,9 +426,9 @@ int Floorplan::_pack(const std::vector<int>& expression) {
   while(!_stack.empty())
     _stack.pop();
 
-  int cluster_id = 0;
+  size_t cluster_id = 0;
 
-  for(int i = 0; i < expression.size(); ++i) {
+  for(size_t i = 0; i < expression.size(); ++i) {
             
     // cutline
     if((expression[i] == -1) || (expression[i] == -2)) {
@@ -346,7 +438,7 @@ int Floorplan::_pack(const std::vector<int>& expression) {
     // integer idx 
     else {
       cluster_t cluster;
-      int idx = expression[i];
+      size_t idx = expression[i];
         
       _modules[idx].llx = 0;
       _modules[idx].lly = 0;
@@ -383,7 +475,7 @@ void Floorplan::_pack_cutline(const int& cutline) {
 
   // horizontal cutline
   if(cutline == -2) {
-    for(int i = cluster_r.beg; i <= cluster_r.end; ++i) {
+    for(size_t i = cluster_r.beg; i <= cluster_r.end; ++i) {
       _modules[_mapping[i]].lly += cluster_l.h;
     }
 
@@ -393,7 +485,7 @@ void Floorplan::_pack_cutline(const int& cutline) {
     
   // vertical cutline
   else {
-    for(int i = cluster_r.beg; i <= cluster_r.end; ++i) {
+    for(size_t i = cluster_r.beg; i <= cluster_r.end; ++i) {
       _modules[_mapping[i]].llx += cluster_l.w; 
     }
 
@@ -408,7 +500,7 @@ void Floorplan::_pack_cutline(const int& cutline) {
 // M1 : swap two adjacent operands
 void Floorplan::_operand_swap(std::vector<int>& prop) {
 
-  int head, tail;
+  size_t head, tail;
 
   while(1) {
     head = (std::rand()) % (prop.size()-1);
@@ -438,7 +530,7 @@ void Floorplan::_operand_swap(std::vector<int>& prop) {
 // M2 : complement a cutline
 void Floorplan::_complement_cutline(std::vector<int>& prop) const {
 
-  int head;
+  size_t head;
 
   while(1) {
     head = (std::rand()) % (prop.size()-1);
@@ -487,7 +579,7 @@ bool Floorplan::_complement_last2cutline(std::vector<int>& prop) const {
 void Floorplan::_operator_operand_swap(const std::vector<int>& curr,
                                            std::vector<int>& prop) const {
     
-  int head, tail;
+  size_t head, tail;
 
   while(1) {
     //std::cout << "trap here";
@@ -540,10 +632,10 @@ void Floorplan::_operator_operand_swap(const std::vector<int>& curr,
 bool Floorplan::_complement_first2cutline(std::vector<int>& prop) const {
 
   // private method uses assert!!!
-  assert(prop.size() > 0);
+  //assert(prop.size() > 0);
 
   // TODO: what happened when prop.size == 0?
-  for(int i = 0; i < prop.size()-1; ++i) {
+  for(size_t i = 0; i < prop.size()-1; ++i) {
     if((prop[i] < 0) && (prop[i+1] < 0)) {
       if(prop[i] == -1)
         prop[i] = -2;
@@ -566,7 +658,7 @@ bool Floorplan::_complement_first2cutline(std::vector<int>& prop) const {
   
 // M6 : randomly roate one module
 void Floorplan::_rotate_module(const std::vector<int>& curr) {
-  int head;
+  size_t head;
 
   while(1) {
     head = (std::rand()) % (curr.size()-1);
@@ -584,122 +676,58 @@ void Floorplan::_rotate_module(const std::vector<int>& curr) {
 
 // generate different expressions from neighbor
 void Floorplan::_generate_neighbor(const std::vector<int>& curr,
-                                       std::vector<int>& prop) {
+                                         std::vector<int>& prop) {
 
   bool is_exist = true;
 
   while(1) {
     switch(std::rand()%6) {
       case 0:
-        std::cout << "rand 0 : \n";
-        std::cout << curr;
+        //std::cout << "rand 0 : \n";
+        //std::cout << curr;
         _operand_swap(prop);
-        std::cout << prop;
-        //++count[0];
+        //std::cout << prop;
         break;
       case 1:
-        std::cout << "rand 1 : \n";
-        std::cout << curr;
+        //std::cout << "rand 1 : \n";
+        //std::cout << curr;
         _complement_cutline(prop);
-        std::cout << prop;
-        //++count[1];
+        //std::cout << prop;
         break;
       case 2:
-        std::cout << "rand 2 : \n";
-        std::cout << curr;
+        //std::cout << "rand 2 : \n";
+        //std::cout << curr;
         is_exist = _complement_last2cutline(prop);
-        //++count[2];
         if(is_exist == false)
           continue;
-        std::cout << prop;
+        //std::cout << prop;
         break;
       case 3:
-        std::cout << "rand 3 : \n";
-        std::cout << curr;
+        //std::cout << "rand 3 : \n";
+        //std::cout << curr;
         _operator_operand_swap(curr, prop);
-        std::cout << prop;
+        //std::cout << prop;
         //++count[3];
         break;
       case 4:
-        std::cout << "rand 4 : \n";
-        std::cout << curr;
+        //std::cout << "rand 4 : \n";
+        //std::cout << curr;
         is_exist = _complement_first2cutline(prop);
         //++count[4];
         if(is_exist == false)
           continue;
-        std::cout << prop;
+        //std::cout << prop;
         break;
       case 5:
-        std::cout << "rand 5 : \n";
-        std::cout << curr;
+        //std::cout << "rand 5 : \n";
+        //std::cout << curr;
         _rotate_module(curr);
-        std::cout << prop;
+        //std::cout << prop;
         //++count[5];
         break;
     }
     break;
   }
 }
-
-
-
-// the following definitions are used for testing purposes
-
-FloorplanTester::FloorplanTester() {
-  Floorplan _tester_fp;
-}
-
-void FloorplanTester::sort_modules_wrt_area() {
-  _tester_fp.open("../../circuits/circuit1.txt");
-  _tester_fp._sort_modules_wrt_area();
-
-  for(int i = 0; i < _tester_fp._sorted_modules_area.size(); ++i)
-    tester_sorted_modules_area.push_back(_tester_fp._sorted_modules_area[i].first);
-}
-
-
-bool FloorplanTester::is_valid_expression(
-  const std::vector<int>& expression) const {
-  return _tester_fp._is_valid_expression(expression);
-}
-
-bool FloorplanTester::operand_swap(std::vector<int>& prop) {
-  _tester_fp._operand_swap(prop);
-  return _tester_fp._is_valid_expression(prop);
-
-}
-
-bool FloorplanTester::complement_cutline(std::vector<int>& prop) {
-  _tester_fp._complement_cutline(prop);
-  return _tester_fp._is_valid_expression(prop);
-}
-
-
-bool FloorplanTester::complement_last2cutline(std::vector<int>& prop) {
-  return _tester_fp._complement_last2cutline(prop);
-}
-
-
-bool FloorplanTester::complement_first2cutline(std::vector<int>& prop) {
-  return _tester_fp._complement_first2cutline(prop);
-}
-
-
-void FloorplanTester::rotate_module(const std::vector<int>& curr) {
-  _tester_fp.open("../../circuits/circuit1.txt");
-  _tester_fp._rotate_module(curr);
-}
-
-
-void FloorplanTester::operator_operand_swap(
-  const std::vector<int>& curr, std::vector<int>& prop) {
-  _tester_fp._operator_operand_swap(curr, prop);
-}
-
-int FloorplanTester::pack(const std::vector<int>& expression) {
-  _tester_fp.open("../../circuits/circuit1.txt");
-  return _tester_fp._pack(expression);
-}
-
 
 }

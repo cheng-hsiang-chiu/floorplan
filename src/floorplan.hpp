@@ -8,50 +8,19 @@
 #include <chrono>
 #include <cassert>
 #include <vector>
-
-// ...
-//
-// 
-// class Floorplan {
-//
-//   friend class FloorplanTest;
-//   friend class YourCompnayTester;
-//  
-//   public:
-//     Floorplan();
-//     void run();
-//     void dump(std::ostream& os) const;
-//   
-//   private:
-//
-//     bool _is_expression_valid(const std::vector<int>& exp) const
-// }
-//
-// 
-// class FloorplanTester {
-//
-//    public:
-//
-//    bool is_expression_valid(const std::vector<int>& exp) const {
-//      return _floorplanner._is_expression_valid(exp);
-//    }
-//
-//    private:
-//
-//       Floorplan _floorplanner;
-//
-// }
-//
 #include <string>
 #include <stack>
-#include <vector>
+
+
 
 #define random_moves 60
 #define P 0.99
 #define t0 -1
 
 #define FP_RANDOM_MOVES 60
-
+#define FP_FROZEN_TEMPERATURE 0.1
+#define FP_MAX_ITERATIONS_PER_TEMPERATURE 1000
+#define FP_SA_RATIO 1 
 
 std::ostream& operator<< (std::ostream &out, const std::vector<int>& vec);
 
@@ -59,13 +28,13 @@ std::ostream& operator<< (std::ostream &out, const std::vector<int>& vec);
 namespace fp {
 
 typedef struct MODULE {
-  int idx;
+  size_t idx;
   int llx, lly;
   int w, h;
 }module_t;
 
 typedef struct CLUSTER {
-  int beg, end;
+  size_t beg, end;
   int w, h;
 }cluster_t;
 
@@ -79,13 +48,11 @@ class Floorplan {
     Floorplan() = default;
     
     // TODO: POD data types don't need reference
-    void optimize(const int& max_iterations_per_temperature,
-                  double& initial_temperature,
-                  const double& frozen_temperature);
+    void optimize();
     
     // TODO: constant method 
     // rename to dump_modules
-    void print_modules(std::ostream& os);
+    void dump_modules(std::ostream& os) const;
   
     void open(const std::string& input_file);
   
@@ -95,7 +62,7 @@ class Floorplan {
     //auto ofs = std::ofstream("myoutput");
     //fp.dump(ifs);
   
-    void dump(const std::string& output_file) const;
+    void dump_json(std::string& output_file) const;
   
   private:
     std::vector<int> _expression;
@@ -145,40 +112,8 @@ class Floorplan {
     void _generate_neighbor(const std::vector<int>& curr,
                             std::vector<int>& prop);
     
-    void _simulated_annealing(const int& max_iterations_per_temperature,
-                              const double& initial_temperature,
-                              const double& frozen_temperature);
-};
-
-// TODO: create another file floorplan_tester.hpp and floorplan_tester.cpp
-class FloorplanTester {
-
-public:
-  std::vector<int> tester_sorted_modules_area;
-  
-  FloorplanTester();
-
-  bool is_valid_expression(const std::vector<int>& expression) const;
-
-  bool operand_swap(std::vector<int>& prop);
- 
-  bool complement_cutline(std::vector<int>& prop);
-
-  bool complement_last2cutline(std::vector<int>& prop);
-
-  bool complement_first2cutline(std::vector<int>& prop);
-
-  void rotate_module(const std::vector<int>& curr);
-
-  void operator_operand_swap(const std::vector<int>& curr,
-                             std::vector<int>& prop);
-  
-  int pack(const std::vector<int>& expression);
-
-  void sort_modules_wrt_area();
-
-private:
-  Floorplan _tester_fp;
+    void _simulated_annealing(const double initial_temperature);
+    
 };
 
 } // end of namespace fp

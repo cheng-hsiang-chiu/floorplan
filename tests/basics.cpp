@@ -1,7 +1,7 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
 #include <doctest.h>
-#include "../src/floorplan.hpp"
+#include "../src/floorplan_tester.hpp"
 
 TEST_CASE("testing is_valid_expression" * doctest::timeout(300)) {
 

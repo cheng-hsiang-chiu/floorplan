@@ -6,16 +6,13 @@
 
 int main(int argc, char* argv[]) {
 
-  if(argc < 6) {
-    std::cerr << "usage: ./floorplan input output ite itemp ftemp\n";
+  if(argc < 3) {
+    std::cerr << "usage: ./floorplan input output ite itemp\n";
     std::exit(EXIT_FAILURE);
   }
 
   std::string input_file = argv[1];
   std::string output_file = argv[2];
-  int max_iterations_per_temperature = std::stoi(argv[3]);
-  double initial_temperature = std::stod(argv[4]);
-  double frozen_temperature = std::stod(argv[5]);
 
   // declare a fp object 
   fp::Floorplan fp_obj;
@@ -24,15 +21,13 @@ int main(int argc, char* argv[]) {
   fp_obj.open(input_file);
 
   // start to generate optimized floorplan
-  fp_obj.optimize(
-    max_iterations_per_temperature, initial_temperature, frozen_temperature 
-  );  
+  fp_obj.optimize();  
 
   // dump the floor plan to console
   fp_obj.dump(std::cout);
 
   // dump the floor plan to output file and its json format
-  fp_obj.dump(output_file);
+  fp_obj.dump_json(output_file);
   
   return 0;
 }
