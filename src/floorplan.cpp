@@ -98,8 +98,20 @@ void Floorplan::dump_json(std::string& output_file) const {
           << ",\"urx\":"  << _urx
           << ",\"ury\":"  << _ury
           << ",\"area\":" << _area
-          << ",\"coordinates\":"
+          << ",\"cost\":" 
           << "[";
+
+  for(size_t i = 0; i < _cost.size(); ++i) {
+    outfile << _cost[i];
+    if(i != _cost.size()-1)
+      outfile << ",";
+    else
+      outfile << "]";
+  }
+
+  outfile << ",\"coordinates\":"
+          << "[";
+
   for(size_t i = 0; i < _modules.size(); ++i) {
     outfile << "{\"idx\":"    << _modules[i].idx
             << ",\"llx\":"    << _modules[i].llx
@@ -111,6 +123,7 @@ void Floorplan::dump_json(std::string& output_file) const {
     else
       outfile << "},";
   }
+
   outfile << "]}";
 }
 
@@ -403,6 +416,7 @@ void Floorplan::_simulated_annealing(const double initial_temperature) {
           ratio_best = ratio_prop;
           _modules_best = _modules;
         }
+        _cost.push_back(abs(cost));
       }
 
       else {
@@ -411,6 +425,7 @@ void Floorplan::_simulated_annealing(const double initial_temperature) {
           expression_curr = expression_prop;
           area_curr = area_prop; 
           ratio_curr = ratio_prop;
+          _cost.push_back(cost);
         }
       }
     }

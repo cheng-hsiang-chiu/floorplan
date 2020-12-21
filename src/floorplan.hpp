@@ -76,6 +76,8 @@ class Floorplan {
     std::stack<cluster_t> _stack;
     
     std::vector<int> _mapping;
+
+    std::vector<int> _cost;
   
     std::string _input_file;
   
