@@ -97,8 +97,8 @@ void Floorplan::dump_json(std::string& output_file) const {
           << ",\"lly\":0"
           << ",\"urx\":"  << _urx
           << ",\"ury\":"  << _ury
-          << ",\"area\":" << _area
-          << ",\"cost\":" 
+          << ",\"area\":" << _area;
+  /*        << ",\"cost\":" 
           << "[";
 
   for(size_t i = 0; i < _cost.size(); ++i) {
@@ -108,7 +108,7 @@ void Floorplan::dump_json(std::string& output_file) const {
     else
       outfile << "]";
   }
-
+  */
   outfile << ",\"coordinates\":"
           << "[";
 
@@ -390,11 +390,17 @@ void Floorplan::_simulated_annealing(const double initial_temperature) {
       // TODO: can we try using aspect ratio? we want to be as close to 1.0 as
       // possible ... a = max(H, W) / min(H, W)
       size_t area_prop = _pack(expression_prop);
-      double ratio_prop = std::max(_urx, _ury) / std::min(_urx, _ury);
+      double ratio_prop = (double)std::max(_urx, _ury) / std::min(_urx, _ury);
       #ifdef FP_SA_RATIO
-      double cost = ratio_prop*area_prop - ratio_curr*area_prop;
+      double cost = ratio_prop*area_prop < ratio_curr*area_prop ?
+                    (double)-1*(ratio_curr*area_prop - ratio_prop*area_prop) :
+                    ratio_prop*area_prop - ratio_prop*area_prop;
+                     
+      //double cost = ratio_prop*area_prop - ratio_curr*area_prop;
       #else
-      double cost = area_prop - area_curr;
+      double cost = area_prop < area_curr ?
+                    (double)-1*(area_curr - area_prop) : area_prop - area_curr;
+      //double cost = area_prop - area_curr;
       #endif
 
 

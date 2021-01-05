@@ -20,7 +20,7 @@
 #define FP_RANDOM_MOVES 60
 #define FP_FROZEN_TEMPERATURE 0.1
 #define FP_MAX_ITERATIONS_PER_TEMPERATURE 1000
-#define FP_SA_RATIO 1 
+//#define FP_SA_RATIO 0
 
 std::ostream& operator<< (std::ostream &out, const std::vector<int>& vec);
 
