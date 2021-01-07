@@ -9,6 +9,9 @@ project(Floorplan VERSION 1.0.0 LANGUAGES CXX)
 option(FP_BUILD_TESTS "Enables builds of tests" ON)
 option(FP_BUILD_MAIN "Enables builds of main programs" ON)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 # project-specific variables
 set(FP_INC_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/include")
 set(FP_LIB_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/lib")
