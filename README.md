@@ -1,3 +1,4 @@
-![example workflow file path](https://github.com/cheng-hsiang-chiu/floorplan/.github/workflows/ubuntu.yml/badge.svg)
-![example workflow file path](https://github.com/cheng-hsiang-chiu/floorplan/.github/workflows/macos.yml/badge.svg)
+[![Ubuntu](https://github.com/cheng-hsiang-chiu/floorplan/workflows/Ubuntu/badge.svg)](https://github.com/cheng-hsiang-chiu/floorplan/actions?query=workflow%3AUbuntu)
+[![macOS](https://github.com/cheng-hsiang-chiu/floorplan/workflows/macOS/badge.svg)](https://github.com/cheng-hsiang-chiu/floorplan/actions?query=workflow%3AmacOS)
+
 # Floorplan Research Projects
