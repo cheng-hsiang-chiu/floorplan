@@ -71,7 +71,7 @@ class Floorplan {
     
     std::vector<module_t> _modules_best;
     
-    std::vector<std::pair<int, int>> _sorted_modules_area;
+    std::vector<std::pair<int, int> > _sorted_modules_area;
     
     std::stack<cluster_t> _stack;
     
