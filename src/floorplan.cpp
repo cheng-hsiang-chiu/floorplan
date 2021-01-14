@@ -267,9 +267,10 @@ double Floorplan::_calculate_initial_temperature() {
     _generate_neighbor(expression_curr, expression_prop);
 
     area_prop = _pack(expression_prop);
-    delta_area = area_prop - area_curr;
+    delta_area = area_prop > area_curr ? 
+                 (area_prop - area_curr) : (area_curr - area_prop);
 
-    total_area_change += abs(delta_area);
+    total_area_change += delta_area;
     ++num_moves;
     expression_curr = expression_prop;
     area_curr = area_prop;
